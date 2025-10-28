@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Dengue Monitoring</title>
+    <link rel="stylesheet" href="css/admin.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.0.0/dist/umd/supabase.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
+</head>
+<body>
+    <header>
+        <div class="header-left">
+            <button class="hamburger-btn"><i class="fas fa-bars"></i></button>
+            <div class="header-title"><h1>D-TECT</h1></div>
+        </div>
+        <div class="header-btn">
+            <button id="info-btn" class="info-btn"><i class="fas fa-info"></i></button>
+            <button class="logout-btn" id="logout">Log Out <i class="fas fa-sign-out-alt"></i></button>
+        </div>
+    </header>
+    <div class="main-page">
+        <nav class="sidebar">
+            <ul>
+                <li><a href="#insert-data"><i class="fas fa-database"></i> Insert Data</a></li>
+                <li><a href="#admin-predictions"><i class="fas fa-chart-line"></i> Predictions</a></li>
+                <li><a href="#admin-barangay"><i class="fas fa-city"></i> Barangay</a></li>
+                <li><a href="#admin-year"><i class="fas fa-calendar-alt"></i> Year</a></li>
+                <li><a href="#prevention"><i class="fas fa-shield-alt"></i> Prevention</a></li>
+                <li><a href="#contact"><i class="fas fa-envelope"></i> Contact</a></li>
+            </ul>
+        </nav>
+        <main class="main-content">
+            <div class="table-wrapper">
+                <table class="prevention-table" id="preventionTable">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Content</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <button id="addNewBtn">Add New Entry</button>
+        </main>
+    </div>
+    <script src="js/admin.js"></script>
+</body>
+</html>

@@ -1,0 +1,143 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+body {
+    font-family: 'Poppins', sans-serif;font-family: 'Poppins', sans-serif;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f0f2f5;
+    flex-direction: column;
+    margin: 0;
+}
+
+html {scroll-behavior: smooth;}
+
+/* Header */
+header {
+    width: 100%;
+    color: #1e3c72;
+    padding: 0 0 60px 0px;
+}
+header h1, h5 {
+    margin: 0 20px 0 20px;
+    align-items: center;
+    text-align: center;
+}
+header h1{
+    padding-top: 30px;
+    font-size: 50px;
+}
+
+/* Login Form */
+.login, .update {
+    margin: 20px 10px 0 10px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 0 7px rgba(0,0,0,0.3);
+    padding: 60px 20px 20px 20px;
+}
+.form-group {margin-bottom: 15px;}
+.form-group #login-email, #login-password, #new-password {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 20px ;
+    box-shadow: 0 0 2px rgba(0, 0, 0, 0.4);
+    box-sizing: border-box;
+    border-radius: 5px;
+    border: none;
+    background-color: white;
+}
+.login-btn, .update-btn {
+    background-color: #1e3c72;
+    color: white;
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    margin-top: 5px;
+    margin-bottom: 5px;
+    transition: all 0.3s ease-in;
+}
+.login-btn:hover {background-color: #345490;;}
+a {
+    display: inline;
+    color: #1e3c72;
+    margin: 5px 0;
+    text-decoration: none;
+    border-bottom: 2px solid transparent;
+    transition: border-color 0.2s ease-in-out;
+}
+a:hover {border-bottom-color: #1e3c72;}
+a:visited {
+    color: #1e3c72;
+    border-bottom-color: transparent;
+}
+.signup-link {
+    align-items: center;
+    text-align: center;
+    margin-top: 40px;
+}
+
+/* Modal */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1002;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.5);
+    justify-content: center;
+    align-items: center;
+}
+.modal-content {
+    background-color: #fff;
+    margin: auto 10px auto 10px;
+    padding: 30px 20px;
+    border-radius: 10px;
+    max-width: 400px;
+    position: relative;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+.modal, .modal-content h2 {text-align: center;}
+
+/* Inputs and select inside modal */
+.name {
+    display: flex;
+    gap: 10px;
+}
+.name input {
+    flex: 1;
+}
+#signup input,
+#signup select, #reset-email, #reset-password-form input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box;
+    font-size: 15px;
+    margin-top: 8px;
+    margin-bottom: 16px;
+}
+.signup-submit-btn, .reset-btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    background-color: #2ecc71;
+    color: white;
+    display: block;
+    margin: 10px auto 0 auto;
+}
+
+.signup-submit-btn:hover {
+    background-color: #27ae60;
+}

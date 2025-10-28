@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Management</title>
+  <link rel="stylesheet" href="css/superadmin.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.0.0/dist/umd/supabase.min.js"></script>
+</head>
+<body>
+  <header>
+      <div class="header-left">
+          <button class="hamburger-btn"><i class="fas fa-bars"></i></button>
+          <div class="header-title"><h1>D-TECT</h1></div>
+      </div>
+      <div class="header-btn">
+          <button id="info-btn" class="info-btn"><i class="fas fa-info"></i></button>
+          <button class="logout-btn" id="logout">Log Out <i class="fas fa-sign-out-alt"></i></button>
+      </div>
+  </header>
+
+  <div class="main-page">
+    <main class="main-content">
+      <div id="log-record" class="content-section">
+        <h2>Log Record</h2>
+        <div class="table-container">
+          <table class= "table" id="logTable">
+            <thead>
+              <tr>
+                <th>Email</th>
+                <th>Full Name</th>
+                <th>Role</th>
+                <th>Time Logged</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="user-management" class="content-section">
+        <h2>User Management</h2>
+        <div class="table-container">
+          <table class= "table" id="usersTable">
+            <thead>
+              <tr>
+                <th>Email</th>
+                <th>Full Name</th>
+                <th>Role</th>
+                <th></th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+  <script src="js/superadmin.js"></script>
+
+</body>
+</html>
