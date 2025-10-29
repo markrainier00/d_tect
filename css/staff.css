@@ -257,6 +257,7 @@ input {
 }
 .modal-content {
     background-color: #fff;
+    height: 550px;
     margin: 15% auto;
     padding: 20px;
     border: 1px solid #888;
@@ -264,6 +265,7 @@ input {
     max-width: 400px;
     border-radius: 10px;
     position: relative;
+    overflow-y: auto;
 }
 .modal h2 {
     margin-top: 0;
