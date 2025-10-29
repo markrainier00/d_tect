@@ -245,7 +245,7 @@ header h5 {
 }
 #barangay-map2, #forecast-map {
     flex: 1 1 0;
-    min-width: 200px;
+    min-width: 175px;
     height: 400px;
     border-radius: 10px;
     border: 2px solid #ccc;
