@@ -14,4 +14,4 @@ RUN npm install
 
 EXPOSE 3000
 
-CMD ["npm", "node server.cjs"]
+CMD ["npm", "start"]
