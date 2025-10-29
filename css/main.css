@@ -359,6 +359,7 @@ header h5 {
     flex-direction: column;
     align-items: stretch;
     justify-content: flex-start;
+    margin-bottom: 100px;
 }
 .contact-details {
     background:linear-gradient(90deg, #1e3c72, #577cbd);

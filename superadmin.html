@@ -11,12 +11,16 @@
 <body>
   <header>
       <div class="header-left">
-          <button class="hamburger-btn"><i class="fas fa-bars"></i></button>
           <div class="header-title"><h1>D-TECT</h1></div>
       </div>
       <div class="header-btn">
-          <button id="info-btn" class="info-btn"><i class="fas fa-info"></i></button>
-          <button class="logout-btn" id="logout">Log Out <i class="fas fa-sign-out-alt"></i></button>
+            <div class="dropdown">
+                <button class="dropdown-btn"><i class="fas fa-ellipsis-v"></i></button>
+                <div class="dropdown-content">
+                    <button id="reset-btn"><i class="fas fa-key"></i>Reset Password</button>
+                    <button class="logout-btn" id="logout"><i class="fas fa-sign-out-alt"></i>Log Out</button>
+                </div>
+            </div>
       </div>
   </header>
 
@@ -58,6 +62,15 @@
       </div>
     </main>
   </div>
+  
+  <div id="forgot-password" class="modal">
+      <form id="forgot-form" class="modal-content">
+          <h2>Reset Your Password</h2>
+          <input type="email" id="reset-email" placeholder="Enter your email" required>
+          <button  type="submit" class="reset-btn">Send Reset Link</button>
+      </form>
+  </div>
+
   <script src="js/superadmin.js"></script>
 
 </body>

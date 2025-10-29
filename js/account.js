@@ -1,8 +1,3 @@
-const supabaseClient = supabase.createClient(
-    "https://yxvgwmxlznpxqmmiofuy.supabase.co",
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl4dmd3bXhsem5weHFtbWlvZnV5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MTY5NTk3NiwiZXhwIjoyMDY3MjcxOTc2fQ.nOfRegHNEriDk2Sioa5f3Aaa_CwPEhyCnPyB9aV6k8Y"
-);
-
 document.addEventListener("DOMContentLoaded", () => {
     const signupBtn = document.getElementById('signup-btn');
     const forgotBtn = document.getElementById('forgot-password-btn');
@@ -121,20 +116,18 @@ document.addEventListener("DOMContentLoaded", () => {
     if (forgotForm && forgotPassword) {
         forgotForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-
+            
             const email = forgotPassword.querySelector('#reset-email').value;
-
-            const { data, error } = await supabaseClient.auth.resetPasswordForEmail(email, {
-                redirectTo: 'http://localhost:3000/reset.html'
+            
+            const res = await fetch('/api/reset-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email })
             });
 
-            if (error) {
-                alert('Error: ' + error.message);
-            } else {
-                alert('A password reset link has been sent to your email.');
-                forgotPassword.style.display = 'none';
-                forgotForm.reset();
-            }
+            alert('A password reset link has been sent to your email.');
+            forgotPassword.style.display = 'none';
+            forgotForm.reset();
         });
     }
 });

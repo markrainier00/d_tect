@@ -19,7 +19,6 @@
     </div>
     <header>
         <div class="header-left">
-            <button class="hamburger-btn"><i class="fas fa-bars"></i></button>
             <div class="header-title"><h1>D-TECT</h1></div>
         </div>
         <div class="header-btn">
@@ -34,16 +33,6 @@
         </div>
     </header>
     <div class="main-page">
-        <nav class="sidebar">
-            <ul>
-                <li><a href="#insert-data"><i class="fas fa-database"></i> Insert Data</a></li>
-                <li><a href="#admin-predictions"><i class="fas fa-chart-line"></i> Predictions</a></li>
-                <li><a href="#admin-barangay"><i class="fas fa-city"></i> Barangay</a></li>
-                <li><a href="#admin-year"><i class="fas fa-calendar-alt"></i> Year</a></li>
-                <li><a href="#prevention"><i class="fas fa-shield-alt"></i> Prevention</a></li>
-                <li><a href="#contact"><i class="fas fa-envelope"></i> Contact</a></li>
-            </ul>
-        </nav>
         <main class="main-content">
             <div id="upload" class="content-section">
                 <h2>Upload Barangay Health Records</h2>
@@ -84,20 +73,21 @@
                     <div class="showData-filters">
                         <div class="filters-section">
                             <label>Barangay: </label>
-                            <select id="filterBarangay"><option value="All">All</option></select>
+                            <div class="filters" id="filterBarangay"></div>
                         </div>
                         <div class="filters-section">
                             <label>Year: </label>
-                            <select id="filterYear"><option value="All">All</option></select>
+                            <div class="filters" id="filterYear"></div>
                         </div>
                         <div class="filters-section">
                             <label>Week: </label>
-                            <select id="filterWeek"><option value="All">All</option></select>
+                            <div class="filters" id="filterWeek"></div>
                         </div>
                     </div>
 
                     <div class="showData-buttons">
                         <button id="searchDataBtn">Search</button>
+                        <button id="downloadCsvBtn" disabled>Download</button>
                         <button id="deleteDataBtn" disabled>Delete Shown Data</button>
                     </div>
                     

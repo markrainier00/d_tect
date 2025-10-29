@@ -4,11 +4,12 @@ require('dotenv').config()
 
 const supabaseUrl = process.env.SUPABASE_URL
 const supabaseKey = process.env.SUPABASE_KEY
+const supabaseAnon = process.env.SUPABASE_ANON_KEY
 
-if (!supabaseUrl || !supabaseKey) {
-  throw new Error('Missing SUPABASE_URL or SUPABASE_KEY in environment variables')
+if (!supabaseUrl || !supabaseKey || !supabaseAnon) {
+  throw new Error('Missing supabase in environment variables')
 }
 
-const supabaseClient = createClient(supabaseUrl, supabaseKey)
+const supabaseClient = createClient(supabaseUrl, supabaseKey, supabaseAnon)
 
 module.exports = supabaseClient

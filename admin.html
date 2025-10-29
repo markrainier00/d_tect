@@ -13,41 +13,119 @@
 <body>
     <header>
         <div class="header-left">
-            <button class="hamburger-btn"><i class="fas fa-bars"></i></button>
             <div class="header-title"><h1>D-TECT</h1></div>
         </div>
         <div class="header-btn">
-            <button id="info-btn" class="info-btn"><i class="fas fa-info"></i></button>
-            <button class="logout-btn" id="logout">Log Out <i class="fas fa-sign-out-alt"></i></button>
+            <div class="dropdown">
+                <button class="dropdown-btn"><i class="fas fa-ellipsis-v"></i></button>
+                <div class="dropdown-content">
+                    <button id="reset-btn"><i class="fas fa-key"></i>Reset Password</button>
+                    <button class="logout-btn" id="logout"><i class="fas fa-sign-out-alt"></i>Log Out</button>
+                </div>
+            </div>
         </div>
     </header>
     <div class="main-page">
-        <nav class="sidebar">
-            <ul>
-                <li><a href="#insert-data"><i class="fas fa-database"></i> Insert Data</a></li>
-                <li><a href="#admin-predictions"><i class="fas fa-chart-line"></i> Predictions</a></li>
-                <li><a href="#admin-barangay"><i class="fas fa-city"></i> Barangay</a></li>
-                <li><a href="#admin-year"><i class="fas fa-calendar-alt"></i> Year</a></li>
-                <li><a href="#prevention"><i class="fas fa-shield-alt"></i> Prevention</a></li>
-                <li><a href="#contact"><i class="fas fa-envelope"></i> Contact</a></li>
-            </ul>
-        </nav>
         <main class="main-content">
-            <div class="table-wrapper">
-                <table class="prevention-table" id="preventionTable">
-                    <thead>
-                        <tr>
-                            <th>Title</th>
-                            <th>Content</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
+            <div class="content">
+                <h2>Prevention Header</h2>
+                <div class="table-wrapper">
+                    <table class="prevention-table" id="preventionheaderTable">
+                        <tbody></tbody>
+                    </table>
+                </div>
             </div>
-            <button id="addNewBtn">Add New Entry</button>
+            <div id="prevention-content" class="content">
+                <h2>Prevention Content</h2>
+                <button id="add-prevention-content" class="add-btn">Add New Content</button>
+                <div class="table-wrapper">
+                    <table class="prevention-table" id="preventionTable">
+                        <tbody></tbody>
+                    </table>
+                </div>
+                
+                <h3>References and Trusted Sources</h3>
+                <button id="add-references" class="add-btn">Add Source</button>
+                <div class="table-wrapper">
+                    <table class="references-table" id="referencesTable">
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            <div id="contact-content" class="content">
+                <h2>Contacts</h2>
+                <button id="add-contact" class="add-btn">Add New Contact</button>
+                <div class="table-wrapper">
+                    <table class="contacts-table" id="contactsTable">
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
         </main>
     </div>
+    
+    <div id="forgot-password" class="modal">
+        <form id="forgot-form" class="modal-content">
+            <h2>Reset Your Password</h2>
+            <input type="email" id="reset-email" placeholder="Enter your email" required>
+            <button  type="submit" class="reset-btn">Send Reset Link</button>
+        </form>
+    </div>
+
+    <div id="addPrevention" class="modal" style="display:none;">
+        <div class="modal-content">
+            <h2>Add New Content</h2>
+            <form id="addPreventionForm">
+                <label for="newTitle">Title:</label>
+                <textarea id="newTitle" required></textarea>
+
+                <label for="newContent">Content:</label>
+                <textarea id="newContent" required></textarea>
+
+                <button type="submit">Add</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="addReference" class="modal" style="display:none;">
+        <div class="modal-content">
+            <h2>Add New Source</h2>
+            <form id="addReferenceForm">
+                <label for="newrefTitle">Title:</label>
+                <input id="newrefTitle" required>
+
+                <label for="newLink">Link:</label>
+                <input type="url" id="newLink" required>
+
+                <button type="submit">Add</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="addContact" class="modal" style="display:none;">
+        <div class="modal-content">
+            <h2>Add New Contact</h2>
+            <form id="addContactForm">
+                <label for="newOffice">Office Name:</label>
+                <input id="newOffice" required>
+
+                <label for="newAddress">Address:</label>
+                <input id="newAddress" required>
+
+                <label for="newPhone">Phone Number:</label>
+                <input type="tel" id="newPhone" required>
+
+                <label for="newEmail">Email:</label>
+                <input type="email" id="newEmail" required>
+
+                <label for="newFacebook">Facebook Link:</label>
+                <input type="url" id="newFacebook" required>
+
+                <button type="submit">Add</button>
+            </form>
+        </div>
+    </div>
+
     <script src="js/admin.js"></script>
 </body>
 </html>
