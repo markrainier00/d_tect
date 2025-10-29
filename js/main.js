@@ -821,8 +821,10 @@ async function loadContactDetails() {
         block.className = 'contact-block';
         block.innerHTML = `
             <h3>${row.office_name}</h3>
-            <p>${row.address}<br>Phone: ${row.phone}<br>
-            Email: <a href="mailto:${row.email}">${row.email}</a><br>
+            <p>
+            ${row.address}<br>
+            ${row.phone ? `Phone: <a href="tel:${row.phone}">${row.phone}</a><br>` : ''}
+            ${row.email ? `Email: <a href="mailto:${row.email}">${row.email}</a><br>` : ''}
             ${row.facebook_url ? `Facebook: <a href="${row.facebook_url}" target="_blank">${row.facebook_url}</a>` : ''}
             </p>`;
 
