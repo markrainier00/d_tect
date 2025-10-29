@@ -11,7 +11,7 @@ WORKDIR /app
 COPY . .
 
 # Install Node dependencies
-RUN npm ci
+RUN npm install
 
 # Install Python dependencies (adjust path if needed)
 RUN pip install -r forecast/requirements.txt
