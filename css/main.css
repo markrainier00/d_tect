@@ -375,6 +375,7 @@ header h5 {
     flex-wrap: wrap;
     justify-content: flex-start;
     width: 100%;
+    font-size: small;
     box-sizing: border-box;
 }
 .contact-block {
