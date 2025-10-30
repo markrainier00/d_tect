@@ -233,6 +233,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify({ barangay, year, week, population, csv: text })
             });
             const result = await res.json();
+            spinner.style.display = "none";
             spinnerText.textContent = result.message;
         } catch (err) {
             spinnerText.textContent = "Upload failed";
