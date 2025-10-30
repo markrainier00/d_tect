@@ -457,7 +457,6 @@ async function loadBarangayData() {
             .from('rate_and_classification')
             .select('Barangay, attack_rate, risk_classification')
             .eq('Year', latest.Year)
-            .eq('Month', latest.Month)
             .eq('Week', latest.Week)
             .order('attack_rate', { ascending: false });
 
