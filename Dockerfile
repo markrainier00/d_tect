@@ -1,17 +1,20 @@
 FROM node:18
 
+# Install Python
 RUN apt-get update && apt-get install -y python3 python3-pip
 
+# Make python3 available as python
+RUN ln -s /usr/bin/python3 /usr/bin/python
+
+# Copy app files
 WORKDIR /app
-
 COPY . .
-
-# Install Python requirements manually (safe way)
-RUN pip install --break-system-packages -r forecast/requirements.txt
 
 # Install Node dependencies
 RUN npm install
 
+# Expose port
 EXPOSE 3000
 
-CMD ["npm", "start"]
+# Start server
+CMD ["node", "server.cjs"]
