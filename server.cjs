@@ -487,7 +487,7 @@ app.post("/api/upload", async (req, res) => {
       inserted.weather = true;
     }
 
-    await fetch('/forecast');
+    await fetch('https://dtect-production.up.railway.app/forecast');
 
     res.json({ message: "Uploaded successfully" });
   } catch (err) {
