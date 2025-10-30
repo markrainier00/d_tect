@@ -20,7 +20,7 @@ def fetch_table(table_name, batch_size=1000):
 
     while True:
         end = start + batch_size - 1
-        res = supabaseClient.table(table_name).select("*").range(start, end).execute()
+        res = supabase.table(table_name).select("*").range(start, end).execute()
         data = res.data or []
         if not data:
             break
