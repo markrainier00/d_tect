@@ -157,7 +157,7 @@ def main():
         batch_size = 100
         for i in range(0, len(all_results), batch_size):
             batch = all_results.iloc[i:i+batch_size].to_dict(orient="records")
-            supabaseClient.table("forecast_results").insert(batch).execute()
+            supabase.table("forecast_results").insert(batch).execute()
 
 
 if __name__ == "__main__":
