@@ -248,7 +248,7 @@ app.get("/dtect/confirm-email", async (req, res) => {
 
   try {
     if (type === "signup") {
-      res.redirect("/signup_success.html?confirmed=true");
+      res.redirect("/account.html?confirmed=true");
     } else {
       res.status(400).json({ success: false, message: "Invalid confirmation type" });
     }
