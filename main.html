@@ -173,7 +173,28 @@
             </div>
         </div>
     </div>
-    <script type="module" src="js/main.js"></script>
+    <div id="downloadModal" class="modal">
+        <div class="modal-content">
+        <h3>Download Options</h3>
+
+        <div class="option-group">
+            <label><input type="radio" name="mode" value="barangay" checked /> Per Barangay</label>
+            <label><input type="radio" name="mode" value="citywide" /> City-Wide</label>
+        </div>
+
+        <div id="barangay-select-section">
+            <h4>Select Barangays</h4>
+            <label><input type="checkbox" id="select-all"> Select All</label>
+            <div id="barangay-wide-list"></div>
+        </div>
+
+        <div class="button-group">
+            <button id="download-table">Download Table</button>
+            <button id="download-chart">Download Chart</button>
+        </div>
+        </div>
+    </div>
+    <script src="js/main.js"></script>
 
 </body>
 </html> 
