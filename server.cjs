@@ -597,7 +597,7 @@ app.post('/api/deleteRecords', async (req, res) => {
     }
 
     // Trigger forecast update
-    await fetch('/forecast');
+    await fetch('https://dtect-production.up.railway.app/forecast');
 
     res.json({ success: true });
   } catch (err) {
