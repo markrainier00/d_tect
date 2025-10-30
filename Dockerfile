@@ -1,10 +1,9 @@
-FROM node:18
+FROM node:18-bullseye
 
-# Install Python
-RUN apt-get update && apt-get install -y python3 python3-pip python3-venv
-
-# Make python3 available as python
-RUN ln -s /usr/bin/python3 /usr/bin/python
+# Install Python 3.10, venv, pip, and distutils
+RUN apt-get update && apt-get install -y \
+    python3.10 python3.10-venv python3.10-distutils python3-pip \
+    && ln -s /usr/bin/python3.10 /usr/bin/python
 
 # Set working directory
 WORKDIR /app
@@ -15,9 +14,9 @@ COPY . .
 # Install Node dependencies
 RUN npm install
 
-# Install Python dependencies in virtual environment
-RUN python -m pip install --upgrade pip \
-    && python -m venv /opt/venv \
+# Create Python virtual environment and install dependencies
+RUN python -m venv /opt/venv \
+    && /opt/venv/bin/pip install --upgrade pip \
     && /opt/venv/bin/pip install --no-cache-dir -r forecast/requirements.txt
 
 # Make venv binaries available in PATH
