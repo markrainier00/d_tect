@@ -992,5 +992,246 @@ document.addEventListener('DOMContentLoaded', () => {
         overlay.addEventListener('click', closeAllModals);
     }
     initializeModal('info-btn', infoModal); 
+  
+    const downloadModal = document.getElementById("downloadModal");
+    const openBtn = document.getElementById("open-download-modal");
+    const barangayList = document.getElementById("barangay-wide-list");
+    const selectAll = document.getElementById("select-all");
+    const barangaySection = document.getElementById("barangay-select-section");
+    const modeRadios = document.getElementsByName("mode");
 
+    // Show/Hide modal
+    openBtn.onclick = async () => {
+        downloadModal.style.display = "block";
+        await loadBarangays();
+    };
+
+    window.onclick = (e) => {
+        if (e.target === downloadModal) downloadModal.style.display = "none";
+    };
+
+
+    // Fetch Barangay list
+    async function loadBarangays() {
+        let allData = [];
+        let from = 0;
+        const chunkSize = 100;
+        
+        while (true) {
+            const { data, error } = await supabaseClient
+                .from("forecast_results")
+                .select("Barangay")
+                .range(from, from + chunkSize - 1);
+
+            if (error) {
+            console.error("Error loading barangays:", error);
+            break;
+            }
+
+            if (!data || data.length === 0) break;
+            allData = allData.concat(data);
+
+            if (data.length < chunkSize) break;
+            from += chunkSize;
+        }
+
+        const uniqueBarangays = [...new Set(allData.map(d => d.Barangay))].sort();
+
+        barangayList.innerHTML = uniqueBarangays
+            .map(
+            b =>
+                `<label><input type="checkbox" class="barangay-checkbox" value="${b}"> ${b}</label>`
+            )
+            .join("");
+    }
+
+    // Select all toggle
+    selectAll.addEventListener("change", () => {
+        document.querySelectorAll(".barangay-checkbox")
+        .forEach((cb) => (cb.checked = selectAll.checked));
+    });
+
+    // Mode toggle
+    modeRadios.forEach((r) =>
+        r.addEventListener("change", () => {
+        barangaySection.style.display =
+            r.value === "barangay" ? "block" : "none";
+        })
+    );
+
+    // Download Table
+    document.getElementById("download-table").addEventListener("click", async () => {
+        const mode = document.querySelector(
+            'input[name="mode"]:checked'
+        ).value;
+        if (mode === "citywide") {
+            await downloadCitywideTable();
+        } else {
+            const selected = [...document.querySelectorAll(".barangay-checkbox:checked")].map(
+            (cb) => cb.value
+            );
+            if (selected.length === 0)
+            return alert("Select at least one barangay.");
+            await downloadBarangayTable(selected);
+        }
+    });
+
+    // Citywide Table
+    async function downloadCitywideTable() {
+        const { data, error } = await supabaseClient
+            .from("forecast_results")
+            .select("date, forecasted_cases");
+
+        if (error) return console.error(error);
+
+        const grouped = {};
+        data.forEach((row) => {
+            if (!grouped[row.date]) grouped[row.date] = 0;
+            grouped[row.date] += row.forecasted_cases;
+        });
+
+        const cityData = Object.entries(grouped).map(([date, total]) => ({
+            date: `"${new Date(date).toISOString().split("T")[0]}"`,  // force Excel to treat as text
+            total_cases: total,
+        }));
+
+        const csv = [
+            "date,total_cases",
+            ...cityData.map(row => `${row.date},${row.total_cases}`)
+        ].join("\n");
+
+        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = "citywide_forecast.csv";
+        link.click();
+        URL.revokeObjectURL(url);
+    }
+
+    // Barangay Table
+    async function downloadBarangayTable(barangays) {
+        const { data, error } = await supabaseClient
+            .from("forecast_results")
+            .select("Barangay, date, forecasted_cases")
+            .in("Barangay", barangays);
+
+        if (error) return console.error(error);
+
+        const csv = [
+            "Barangay,date,forecasted_cases",
+            ...data.map(row => {
+                const formattedDate = `"${new Date(row.date).toISOString().split("T")[0]}"`; 
+                return `${row.Barangay},${formattedDate},${row.forecasted_cases}`;
+            })
+        ].join("\n");
+
+        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = "barangay_forecast.csv";
+        link.click();
+        URL.revokeObjectURL(url);
+    }
+    
+    // Download chart with white background
+    async function downloadChartImageFromData({ labels, dataPoints, label = "Forecast" }, filename = "forecast_chart.png") {
+        const tempCanvas = document.createElement("canvas");
+        tempCanvas.width = 800;
+        tempCanvas.height = 400;
+        tempCanvas.style.position = "fixed";
+        tempCanvas.style.left = "-9999px"; // offscreen
+        document.body.appendChild(tempCanvas);
+
+        const ctx = tempCanvas.getContext("2d");
+
+        // Fill white background
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+
+        const tempChart = new Chart(ctx, {
+            type: "line",
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: label,
+                    data: dataPoints,
+                    borderColor: "#1e3c72",
+                    fill: false
+                }]
+            },
+            options: {
+                responsive: false,  // IMPORTANT: fixed canvas size
+                animation: false,   // disable animation
+                plugins: {
+                    legend: { display: true }
+                },
+                scales: {
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+
+        // Wait a tiny bit to ensure Chart.js renders
+        await new Promise(resolve => setTimeout(resolve, 50));
+
+        // Export PNG
+        const base64Image = tempCanvas.toDataURL("image/png");
+
+        // Trigger download
+        const link = document.createElement("a");
+        link.href = base64Image;
+        link.download = filename;
+        link.click();
+
+        // Cleanup
+        tempChart.destroy();
+        document.body.removeChild(tempCanvas);
+    }
+    document.getElementById("download-chart").addEventListener("click", async () => {
+        const mode = document.querySelector('input[name="mode"]:checked').value;
+
+        if (mode === "citywide") {
+            const { data, error } = await supabaseClient
+                .from("forecast_results")
+                .select("date, forecasted_cases");
+            if (error) return console.error(error);
+
+            const grouped = {};
+            data.forEach(row => {
+                const dateStr = new Date(row.date).toISOString().split("T")[0];
+                if (!grouped[dateStr]) grouped[dateStr] = 0;
+                grouped[dateStr] += row.forecasted_cases;
+            });
+
+            await downloadChartImageFromData({
+                labels: Object.keys(grouped),
+                dataPoints: Object.values(grouped),
+                label: "Citywide Forecast"
+            }, "citywide_forecast.png");
+
+        } else {
+            const selected = [...document.querySelectorAll(".barangay-checkbox:checked")].map(cb => cb.value);
+            if (selected.length === 0) return alert("Select at least one barangay.");
+
+            const { data, error } = await supabaseClient
+                .from("forecast_results")
+                .select("Barangay, date, forecasted_cases")
+                .in("Barangay", selected);
+            if (error) return console.error(error);
+
+            for (const barangay of selected) {
+                const barangayData = data.filter(d => d.Barangay === barangay);
+                const labels = barangayData.map(d => new Date(d.date).toISOString().split("T")[0]);
+                const cases = barangayData.map(d => d.forecasted_cases);
+
+                await downloadChartImageFromData({
+                    labels: labels,
+                    dataPoints: cases,
+                    label: `Forecast in ${barangay}`
+                }, `${barangay}_forecast.png`);
+            }
+        }
+    });
 }); 
