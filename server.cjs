@@ -55,7 +55,10 @@ app.post("/dtect/signup", async (req, res) => {
           role,
         },
       },
-    });
+    },
+  {
+    redirectTo: 'http://dtect-production.up.railway.app/account.html?confirmed=true'
+  });
 
     if (signupError) {
       console.error('Signup error:', signupError);
@@ -248,7 +251,7 @@ app.get("/dtect/confirm-email", async (req, res) => {
 
   try {
     if (type === "signup") {
-      res.redirect("/signup_success.html?confirmed=true");
+      res.redirect("/account.html?confirmed=true");
     } else {
       res.status(400).json({ success: false, message: "Invalid confirmation type" });
     }
@@ -268,7 +271,7 @@ app.post('/api/reset-password', async (req, res) => {
 
   try {
     const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
-      redirectTo: 'http://localhost:3000/reset.html'
+      redirectTo: '/reset.html'
     });
 
     if (error) throw error;
@@ -484,7 +487,7 @@ app.post("/api/upload", async (req, res) => {
       inserted.weather = true;
     }
 
-    await fetch('http://localhost:3000/forecast');
+    await fetch('https://dtect-production.up.railway.app/forecast');
 
     res.json({ message: "Uploaded successfully" });
   } catch (err) {
@@ -594,7 +597,7 @@ app.post('/api/deleteRecords', async (req, res) => {
     }
 
     // Trigger forecast update
-    await fetch('http://localhost:3000/forecast');
+    await fetch('https://dtect-production.up.railway.app/forecast');
 
     res.json({ success: true });
   } catch (err) {
@@ -846,4 +849,4 @@ app.delete('/api/users/:id', async (req, res) => {
   }
 });
 
-app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
+app.listen(PORT, () => console.log(`Server running on ${PORT}`));

@@ -823,6 +823,10 @@ async function loadContactDetails() {
             ${row.address}<br>
             ${row.phone ? `Phone: <a href="tel:${row.phone}">${row.phone}</a><br>` : ''}
             ${row.email ? `Email: <a href="mailto:${row.email}">${row.email}</a><br>` : ''}
+            <p>
+            ${row.address}<br>
+            ${row.phone ? `Phone: <a href="tel:${row.phone}">${row.phone}</a><br>` : ''}
+            ${row.email ? `Email: <a href="mailto:${row.email}">${row.email}</a><br>` : ''}
             ${row.facebook_url ? `Facebook: <a href="${row.facebook_url}" target="_blank">${row.facebook_url}</a>` : ''}
             </p>`;
 
@@ -990,7 +994,7 @@ document.addEventListener('DOMContentLoaded', () => {
         overlay.addEventListener('click', closeAllModals);
     }
     initializeModal('info-btn', infoModal); 
-
+  
     const downloadModal = document.getElementById("downloadModal");
     const openBtn = document.getElementById("open-download-modal");
     const barangayList = document.getElementById("barangay-wide-list");
@@ -1232,5 +1236,4 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     });
-
 }); 

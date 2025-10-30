@@ -224,6 +224,9 @@ header h5 {
     min-width: 150px;
     margin: 0;
     padding: 5px;
+    min-width: 150px;
+    margin: 0;
+    padding: 5px;
     gap: 10px;
     background-color: white;
     border-radius: 10px;
@@ -236,23 +239,27 @@ header h5 {
 .barangay-list, .forecast-list {
     flex: 1 1 0;
     min-width: 150px;
+    min-width: 150px;
     height: 400px;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
     gap: 10px;
     margin: 10px;
+    margin: 10px;
 }
 #barangay-map2, #forecast-map {
     flex: 1 1 0;
-    min-width: 175px;
+    min-width: 250px;
     height: 400px;
     border-radius: 10px;
     border: 2px solid #ccc;
     margin: 10px;
+    margin: 10px;
 }
 .barangay-card {
     max-width: 500px;
+    min-width: 200px;
     min-width: 200px;
     background-color: white;
     box-shadow: 0 2px 5px rgba(0,0,0,0.3);
@@ -286,6 +293,7 @@ header h5 {
     min-height: 250px;
     max-height: 400px;
     min-width: 200px;
+    min-width: 200px;
     max-width: 500px;
     display: flex;
     flex-direction: column;
@@ -295,6 +303,33 @@ header h5 {
     justify-content: center;
     box-sizing: border-box;
 }
+#open-download-modal, #download-table, #download-chart {
+    border-radius: 5px;
+    color: #fff;
+    background-color:#1e3c72;
+    padding: 5px;
+    margin-right: 5px;
+    cursor: pointer;
+}
+.option-group {
+  display: flex;
+  justify-content: space-around;
+  margin: 15px 0;
+}
+#barangay-select-section {
+  max-height: 180px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 10px;
+  background: #fafafa;
+  margin-bottom: 15px;
+}
+#barangay-wide-list label {
+  display: block;
+  padding: 4px 0;
+}
+
 #open-download-modal, #download-table, #download-chart {
     border-radius: 5px;
     color: #fff;
@@ -401,6 +436,7 @@ header h5 {
     flex-wrap: wrap;
     justify-content: flex-start;
     width: 100%;
+    font-size: small;
     font-size: small;
     box-sizing: border-box;
 }
