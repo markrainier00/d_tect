@@ -65,7 +65,7 @@ def main():
     merged = merged.sort_values(["Barangay", "date"]).reset_index(drop=True)
 
     # Truncate old forecast results
-    supabaseClient.table("forecast_results").delete().neq("Barangay", "").execute()
+    supabase.table("forecast_results").delete().neq("Barangay", "").execute()
 
     all_results = []
 
