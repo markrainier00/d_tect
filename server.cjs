@@ -55,7 +55,10 @@ app.post("/dtect/signup", async (req, res) => {
           role,
         },
       },
-    });
+    },
+  {
+    redirectTo: 'http://dtect-production.up.railway.app/account.html?confirmed=true'
+  });
 
     if (signupError) {
       console.error('Signup error:', signupError);
