@@ -853,4 +853,14 @@ app.delete('/api/users/:id', async (req, res) => {
   }
 });
 
-app.listen(PORT, () => console.log(`Server running on ${PORT}`));
+app.listen(PORT, async () => {
+  console.log(`Server running on port ${PORT}`);
+
+  try {
+    console.log("Running forecast script on server startup...");
+    await runForecast();
+    console.log("Forecast completed successfully.");
+  } catch (err) {
+    console.error("Forecast failed:", err.message);
+  }
+});
