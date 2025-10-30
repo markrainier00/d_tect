@@ -360,6 +360,10 @@ function getMonthFromISOWeek(year, week) {
     const targetDate = new Date(isoWeek1Monday);
     targetDate.setDate(isoWeek1Monday.getDate() + (week - 1) * 7);
 
+    if (targetDate.getFullYear() !== year) {
+      targetDate.setFullYear(year, 0, 1);
+    }
+    
     return monthNames[targetDate.getMonth()];
 }
 
