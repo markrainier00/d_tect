@@ -1,4 +1,4 @@
-FROM node:18
+sFROM node:18
 
 # Install Python
 RUN apt-get update && apt-get install -y python3 python3-pip
@@ -17,7 +17,7 @@ RUN npm install
 
 # Install Python dependencies
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r forecast/requirements.txt
 
 # Expose port
 EXPOSE 3000
