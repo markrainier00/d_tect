@@ -16,7 +16,7 @@ COPY . .
 RUN npm install
 
 # Install Python dependencies
-COPY requirements.txt .
+COPY forecast/requirements.txt .
 RUN pip install --no-cache-dir -r forecast/requirements.txt
 
 # Expose port
