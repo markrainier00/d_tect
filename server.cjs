@@ -491,7 +491,7 @@ app.post("/api/upload", async (req, res) => {
       inserted.weather = true;
     }
 
-    await fetch('https://dtect-production.up.railway.app/forecast/forecast.py');
+    await fetch('https://dtect-production.up.railway.app/forecast');
 
     res.json({ message: "Uploaded successfully" });
   } catch (err) {
@@ -601,7 +601,7 @@ app.post('/api/deleteRecords', async (req, res) => {
     }
 
     // Trigger forecast update
-    await fetch('https://dtect-production.up.railway.app/forecast/forecast.py');
+    await fetch('https://dtect-production.up.railway.app/forecast');
 
     res.json({ success: true });
   } catch (err) {
