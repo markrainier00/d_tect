@@ -1,9 +1,9 @@
 FROM node:18-bullseye
 
-# Install Python 3.10, venv, pip, and distutils
+# Install Python 3.9, venv, pip, and distutils
 RUN apt-get update && apt-get install -y \
-    python3.10 python3.10-venv python3.10-distutils python3-pip \
-    && ln -s /usr/bin/python3.10 /usr/bin/python
+    python3 python3-venv python3-distutils python3-pip \
+    && ln -s /usr/bin/python3 /usr/bin/python
 
 # Set working directory
 WORKDIR /app
