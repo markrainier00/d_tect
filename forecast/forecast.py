@@ -107,8 +107,11 @@ def main():
         last_row = brgy_df.iloc[-1].copy()
         preds = []
 
-        for _ in range(10):
-            next_date = last_row["date"] + pd.Timedelta(weeks=1)
+        
+        current_week_start = pd.Timestamp.now() - pd.to_timedelta(pd.Timestamp.now().weekday(), unit='d')
+
+        for i in range(10):
+            next_date = current_week_start + pd.Timedelta(weeks=i)
             last_row["date"] = next_date
             
             features_row = last_row[features]
