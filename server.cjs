@@ -363,7 +363,7 @@ function getMonthFromISOWeek(year, week) {
     if (targetDate.getFullYear() !== year) {
       targetDate.setFullYear(year, 0, 1);
     }
-    
+
     return monthNames[targetDate.getMonth()];
 }
 
@@ -507,6 +507,7 @@ app.post("/api/upload", async (req, res) => {
   }
 });
 
+// Search records
 app.post('/api/searchRecords', async (req, res) => {
   const { barangays, years, weeks } = req.body;
   try {
@@ -600,10 +601,77 @@ app.post('/api/deleteRecords', async (req, res) => {
       if (data.length < batchSize) break;
     }
 
-    // Trigger forecast update
     await fetch('https://dtect-production.up.railway.app/forecast');
 
     res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Load forecast records to download
+app.get("/api/barangays", async (req, res) => {
+  let allData = [];
+  let from = 0;
+  const chunkSize = 100;
+
+  try {
+    while (true) {
+      const { data, error } = await supabaseClient
+        .from("forecast_results")
+        .select("Barangay")
+        .range(from, from + chunkSize - 1);
+
+      if (error) throw error;
+      if (!data || data.length === 0) break;
+      allData = allData.concat(data);
+      if (data.length < chunkSize) break;
+      from += chunkSize;
+    }
+
+    const unique = [...new Set(allData.map((d) => d.Barangay))].sort();
+    res.json(unique);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get("/api/citywide", async (req, res) => {
+  try {
+    const { data, error } = await supabaseClient
+      .from("forecast_results")
+      .select("date, forecasted_cases");
+
+    if (error) throw error;
+
+    const grouped = {};
+    data.forEach((r) => {
+      if (!grouped[r.date]) grouped[r.date] = 0;
+      grouped[r.date] += r.forecasted_cases;
+    });
+
+    res.json(grouped);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get("/api/barangay", async (req, res) => {
+  const barangays = req.query.list?.split(",") || [];
+  if (barangays.length === 0)
+    return res.status(400).json({ error: "No barangay list provided." });
+
+  try {
+    const { data, error } = await supabaseClient
+      .from("forecast_results")
+      .select("Barangay, date, forecasted_cases")
+      .in("Barangay", barangays);
+
+    if (error) throw error;
+    res.json(data);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });
@@ -852,6 +920,8 @@ app.delete('/api/users/:id', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+
 
 app.listen(PORT, async () => {
   console.log(`Server running on port ${PORT}`);

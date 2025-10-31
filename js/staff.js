@@ -411,4 +411,159 @@ document.addEventListener('DOMContentLoaded', () => {
             loadingModal.style.display = "none";
         }
     });
+
+    const downloadModal = document.getElementById("downloadModal");
+    const openBtn = document.getElementById("open-download-modal");
+    const barangayList = document.getElementById("barangay-wide-list");
+    const selectAll = document.getElementById("select-all");
+    const barangaySection = document.getElementById("barangay-select-section");
+    const modeRadios = document.getElementsByName("mode");
+
+    // Open modal
+    openBtn.onclick = async () => {
+        downloadModal.style.display = "block";
+        await loadBarangays();
+    };
+
+    window.onclick = (e) => {
+        if (e.target === downloadModal) downloadModal.style.display = "none";
+    };
+
+    // Fetch barangay list from server
+    async function loadBarangays() {
+    const res = await fetch("/api/barangays");
+    const barangays = await res.json();
+
+    barangayList.innerHTML = barangays
+        .map(
+            (b) =>
+                `<label><input type="checkbox" class="barangay-checkbox" value="${b}"> ${b}</label>`
+        )
+        .join("");
+    }
+
+    // Select all toggle
+    selectAll.addEventListener("change", () => {
+        document.querySelectorAll(".barangay-checkbox")
+            .forEach((cb) => (cb.checked = selectAll.checked));
+    });
+
+    // Mode toggle
+    modeRadios.forEach((r) =>
+        r.addEventListener("change", () => {
+            barangaySection.style.display =
+            r.value === "barangay" ? "block" : "none";
+        })
+    );
+
+    // Download table
+    document.getElementById("download-table").addEventListener("click", async () => {
+        const mode = document.querySelector('input[name="mode"]:checked').value;
+
+        if (mode === "citywide") {
+            const res = await fetch("/api/citywide");
+            const data = await res.json();
+
+            const csv = [
+                "date,total_cases",
+                ...Object.entries(data).map(([date, total]) => `"${date}",${total}`),
+            ].join("\n");
+
+            downloadCSV(csv, "citywide_forecast.csv");
+        } else {
+            const selected = [...document.querySelectorAll(".barangay-checkbox:checked")].map(
+                (cb) => cb.value
+            );
+            if (selected.length === 0) return alert("Select at least one barangay.");
+
+            const res = await fetch(`/api/barangay?list=${selected.join(",")}`);
+            const data = await res.json();
+
+            const csv = [
+                "Barangay,date,forecasted_cases",
+                ...data.map(
+                    (row) => `${row.Barangay},"${row.date}",${row.forecasted_cases}`
+            ),
+            ].join("\n");
+
+            downloadCSV(csv, "barangay_forecast.csv");
+        }
+    });
+
+    function downloadCSV(csv, filename) {
+        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = filename;
+        link.click();
+        URL.revokeObjectURL(url);
+    }
+
+    // Download chart
+    document.getElementById("download-chart").addEventListener("click", async () => {
+        const mode = document.querySelector('input[name="mode"]:checked').value;
+
+        if (mode === "citywide") {
+            const res = await fetch("/api/citywide");
+            const data = await res.json();
+
+            await downloadChartImageFromData({
+                labels: Object.keys(data),
+                dataPoints: Object.values(data),
+                label: "Citywide Forecast",
+            }, "citywide_forecast.png");
+
+        } else {
+            const selected = [...document.querySelectorAll(".barangay-checkbox:checked")].map(
+                (cb) => cb.value
+            );
+            if (selected.length === 0) return alert("Select at least one barangay.");
+
+            const res = await fetch(`/api/barangay?list=${selected.join(",")}`);
+            const data = await res.json();
+
+            for (const barangay of selected) {
+                const barangayData = data.filter((d) => d.Barangay === barangay);
+                const labels = barangayData.map((d) => d.date);
+                const cases = barangayData.map((d) => d.forecasted_cases);
+
+                await downloadChartImageFromData({
+                    labels,
+                    dataPoints: cases,
+                    label: `Forecast in ${barangay}`,
+                }, `${barangay}_forecast.png`);
+            }
+        }
+    });
+
+    // Chart download helper
+    async function downloadChartImageFromData({ labels, dataPoints, label }, filename) {
+        const tempCanvas = document.createElement("canvas");
+        tempCanvas.width = 800;
+        tempCanvas.height = 400;
+        document.body.appendChild(tempCanvas);
+
+        const ctx = tempCanvas.getContext("2d");
+        ctx.fillStyle = "#fff";
+        ctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+
+        const chart = new Chart(ctx, {
+            type: "line",
+            data: {
+            labels,
+            datasets: [{ label, data: dataPoints, borderColor: "#1e3c72", fill: false }],
+            },
+            options: { responsive: false, animation: false },
+        });
+
+        await new Promise((r) => setTimeout(r, 50));
+        const link = document.createElement("a");
+        link.href = tempCanvas.toDataURL("image/png");
+        link.download = filename;
+        link.click();
+
+        chart.destroy();
+        document.body.removeChild(tempCanvas);
+    }
 });

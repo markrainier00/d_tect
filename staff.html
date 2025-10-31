@@ -39,81 +39,13 @@
                 <h2>Upload Barangay Health Records</h2>
                 <button id="upload-btn">Upload New Records</button>
                 <button id="showData-btn">Show Data</button>
+                <button id="open-download-modal">Download Forecast Report</button>
             </div>
 
             <!-- Modal -->
-            <div id="upload-modal" class="modal">
-                <div class="modal-content">
-                    <h2>Upload CSV Records</h2>
-
-                    <label for="barangay">Barangay:</label>
-                    <select id="barangay"></select>
-
-                    <label for="year">Year:</label>
-                    <input type="number" id="year" min="2000" max="2100" placeholder="e.g., 2025">
-
-                    <label for="week">Week:</label>
-                    <input type="number" id="week" min="1" max="52" placeholder="e.g., 12">
-
-                    <label for="population">Population:</label>
-                    <input type="number" id="population" name="population" min="1" required>
-
-                    <label for="csvFile">Upload CSV:</label>
-                    <input type="file" id="csvFile" accept=".csv">
-
-                    <div class="modal-actions">
-                        <button id="save-btn">Upload</button>
-                    </div>
-                </div>
-            </div>
-                
-            <div id="showData-Modal" class="modal">
-                <div class="modal-content">
-                    <h2>View and Manage Records</h2>
-
-                    <div class="showData-filters">
-                        <div class="filters-section">
-                            <label>Barangay: </label>
-                            <div class="filters" id="filterBarangay"></div>
-                        </div>
-                        <div class="filters-section">
-                            <label>Year: </label>
-                            <div class="filters" id="filterYear"></div>
-                        </div>
-                        <div class="filters-section">
-                            <label>Week: </label>
-                            <div class="filters" id="filterWeek"></div>
-                        </div>
-                    </div>
-
-                    <div class="showData-buttons">
-                        <button id="searchDataBtn">Search</button>
-                        <button id="downloadCsvBtn" disabled>Download</button>
-                        <button id="deleteDataBtn" disabled>Delete Shown Data</button>
-                    </div>
-                    
-                    <div id="dataTable-container" class="dataTable-container">
-                        <table id="dataTable">
-                        <thead>
-                            <tr>
-                            <th>Barangay</th>
-                            <th>Year</th>
-                            <th>Month</th>
-                            <th>Week</th>
-                            <th>Gender</th>
-                            <th>Age Group</th>
-                            <th>Cases</th>
-                            </tr>
-                        </thead>
-                        <tbody id="dataTableBody"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
             
         </main>
 
-<!-- Modals -->
     <!-- Information Modal -->
     <div id="info-modal" class="modal">
         <div class="modal-content">
@@ -137,6 +69,96 @@
         </form>
     </div>
 
+    <div id="upload-modal" class="modal">
+        <div class="modal-content">
+            <h2>Upload CSV Records</h2>
+
+            <label for="barangay">Barangay:</label>
+            <select id="barangay"></select>
+
+            <label for="year">Year:</label>
+            <input type="number" id="year" min="2000" max="2100" placeholder="e.g., 2025">
+
+            <label for="week">Week:</label>
+            <input type="number" id="week" min="1" max="52" placeholder="e.g., 12">
+
+            <label for="population">Population:</label>
+            <input type="number" id="population" name="population" min="1" required>
+
+            <label for="csvFile">Upload CSV:</label>
+            <input type="file" id="csvFile" accept=".csv">
+
+            <div class="modal-actions">
+                <button id="save-btn">Upload</button>
+            </div>
+        </div>
+    </div>
+        
+    <div id="showData-Modal" class="modal">
+        <div class="modal-content">
+            <h2>View and Manage Records</h2>
+
+            <div class="showData-filters">
+                <div class="filters-section">
+                    <label>Barangay: </label>
+                    <div class="filters" id="filterBarangay"></div>
+                </div>
+                <div class="filters-section">
+                    <label>Year: </label>
+                    <div class="filters" id="filterYear"></div>
+                </div>
+                <div class="filters-section">
+                    <label>Week: </label>
+                    <div class="filters" id="filterWeek"></div>
+                </div>
+            </div>
+
+            <div class="showData-buttons">
+                <button id="searchDataBtn">Search</button>
+                <button id="downloadCsvBtn" disabled>Download</button>
+                <button id="deleteDataBtn" disabled>Delete Shown Data</button>
+            </div>
+            
+            <div id="dataTable-container" class="dataTable-container">
+                <table id="dataTable">
+                <thead>
+                    <tr>
+                    <th>Barangay</th>
+                    <th>Year</th>
+                    <th>Month</th>
+                    <th>Week</th>
+                    <th>Gender</th>
+                    <th>Age Group</th>
+                    <th>Cases</th>
+                    </tr>
+                </thead>
+                <tbody id="dataTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="downloadModal" class="modal">
+        <div class="modal-content">
+        <h3>Download Options</h3>
+
+        <div class="option-group">
+            <label><input type="radio" name="mode" value="barangay" checked /> Per Barangay</label>
+            <label><input type="radio" name="mode" value="citywide" /> City-Wide</label>
+        </div>
+
+        <div id="barangay-select-section">
+            <h4>Select Barangays</h4>
+            <label><input type="checkbox" id="select-all"> Select All</label>
+            <div id="barangay-wide-list"></div>
+        </div>
+
+        <div class="button-group">
+            <button id="download-table">Download Table</button>
+            <button id="download-chart">Download Chart</button>
+        </div>
+        </div>
+    </div>
     <script src="js/staff.js"></script>
 </body>
 </html> 

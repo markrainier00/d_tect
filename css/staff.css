@@ -342,6 +342,33 @@ input {
 }
 #dataTable tbody tr:nth-child(even) {background-color: #f9f9f9;}
 
+#open-download-modal, #download-table, #download-chart {
+    border-radius: 5px;
+    color: #fff;
+    background-color:#1e3c72;
+    padding: 5px;
+    margin-right: 5px;
+    cursor: pointer;
+}
+.option-group {
+  display: flex;
+  justify-content: space-around;
+  margin: 15px 0;
+}
+#barangay-select-section {
+  max-height: 180px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 10px;
+  background: #fafafa;
+  margin-bottom: 15px;
+}
+#barangay-wide-list label {
+  display: block;
+  padding: 4px 0;
+}
+
 .search-spinner {
     border: 4px solid #f3f3f3;
     border-top: 4px solid #577cbd;
