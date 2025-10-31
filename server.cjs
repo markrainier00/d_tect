@@ -2,7 +2,7 @@ require('dotenv').config();
 const express = require("express");
 const bodyParser = require("body-parser");
 const fetch = require("node-fetch");
-const router = express.Router();
+const cron = require("node-cron");
 const supabaseClient = require('./supabaseClient');
 const { spawn } = require('child_process');
 const path = require("path");
@@ -927,10 +927,20 @@ app.listen(PORT, async () => {
   console.log(`Server running on port ${PORT}`);
 
   try {
-    console.log("Running forecast script on server startup...");
+    console.log("Running forecast on server startup...");
     await runForecast();
     console.log("Forecast completed successfully.");
   } catch (err) {
     console.error("Forecast failed:", err.message);
+  }
+});
+
+cron.schedule("0 2 * * *", async () => {
+  console.log("Running daily forecast...");
+  try {
+    await runForecast();
+    console.log("Daily forecast completed successfully.");
+  } catch (err) {
+    console.error("Daily forecast failed:", err.message);
   }
 });
