@@ -331,6 +331,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     tbody.appendChild(tr);
                 });
 
+                
+                document.getElementById("showData-Modal-content").scrollTop = dataTableContainer.offsetTop;
                 document.getElementById("deleteDataBtn").disabled = lastFetchedData.length === 0;
                 document.getElementById("downloadCsvBtn").disabled = lastFetchedData.length === 0;
             } else {
@@ -415,7 +417,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const downloadModal = document.getElementById("downloadModal");
     const openBtn = document.getElementById("open-download-modal");
     const barangayList = document.getElementById("barangay-wide-list");
-    const selectAll = document.getElementById("select-all");
     const barangaySection = document.getElementById("barangay-select-section");
     const modeRadios = document.getElementsByName("mode");
 
@@ -431,30 +432,38 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Fetch barangay list from server
     async function loadBarangays() {
-    const res = await fetch("/api/barangays");
-    const barangays = await res.json();
+        barangayList.innerHTML = `
+            <label><input type="checkbox" id="select-all"> Select All</label>
+            ${allowedBarangays
+                .map(
+                    (b) =>
+                        `<label><input type="checkbox" class="barangay-checkbox" value="${b}"> ${b}</label>`
+                )
+                .join("")}
+        `;
 
-    barangayList.innerHTML = barangays
-        .map(
-            (b) =>
-                `<label><input type="checkbox" class="barangay-checkbox" value="${b}"> ${b}</label>`
-        )
-        .join("");
+        const selectAll = document.getElementById("select-all");
+        selectAll.addEventListener("change", () => {
+            document.querySelectorAll(".barangay-checkbox")
+                .forEach((cb) => (cb.checked = selectAll.checked));
+        });
     }
 
-    // Select all toggle
-    selectAll.addEventListener("change", () => {
-        document.querySelectorAll(".barangay-checkbox")
-            .forEach((cb) => (cb.checked = selectAll.checked));
-    });
 
     // Mode toggle
-    modeRadios.forEach((r) =>
-        r.addEventListener("change", () => {
-            barangaySection.style.display =
-            r.value === "barangay" ? "block" : "none";
-        })
-    );
+    modeRadios.forEach((radio) => {
+        radio.addEventListener("change", (e) => {
+            if (e.target.value === "barangay") {
+                barangaySection.style.visibility = "visible";
+                barangaySection.style.pointerEvents = "auto";
+                barangaySection.style.height = "auto";
+            } else {
+                barangaySection.style.visibility = "hidden";
+                barangaySection.style.pointerEvents = "none";
+                barangaySection.style.height = "0";
+            }
+        });
+    });
 
     // Download table
     document.getElementById("download-table").addEventListener("click", async () => {

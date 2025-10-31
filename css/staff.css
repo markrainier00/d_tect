@@ -193,7 +193,8 @@ header h5 {
     margin: 10px auto 0 auto;
 }
 
-#upload button, #upload-modal button, #searchDataBtn, #downloadCsvBtn, #deleteDataBtn {
+#upload button, #upload-modal button, #searchDataBtn, #downloadCsvBtn,
+#open-download-modal, #download-table, #download-chart {
     background-color: #1e3c72;
     color: white;
     padding: 10px 18px;
@@ -201,10 +202,24 @@ header h5 {
     border-radius: 6px;
     margin-top: 10px;
     cursor: pointer;
+    transition: all 0.3s ease-in;
 }
-#deleteDataBtn{
+#upload button:hover, #upload-modal button:hover, #searchDataBtn:hover, #downloadCsvBtn:hover,
+#deleteDataBtn:hover, #open-download-modal:hover, #download-table:hover, #download-chart:hover {
+    background-color: #172e59;
+}
+#deleteDataBtn {
     background-color: #d9534f;
+    color: white;
+    padding: 10px 18px;
+    border: none;
+    border-radius: 6px;
+    margin-top: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease-in;
 }
+#deleteDataBtn:hover { background-color: #c64c48; }
+
 input {
     width: 100%;
     padding: 8px;
@@ -266,6 +281,7 @@ input {
     border-radius: 10px;
     position: relative;
     overflow-y: auto;
+    overflow-x: hidden;
 }
 .modal h2 {
     margin-top: 0;
@@ -295,6 +311,9 @@ input {
     justify-self: center;
     box-sizing: border-box;
 }
+#showData-Modal .modal-content{
+    height: 600px;
+}
 .showData-filters {
     display: flex;
     flex-direction: column;
@@ -302,20 +321,20 @@ input {
     gap: 10px;
     margin-bottom: 15px;
 }
-.filters-section {
+.filters-section, #barangay-select-section {
     display: flex;
     flex-wrap: wrap;
     gap: 3px;
     align-items: center;
 }
 .showData-buttons {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 10px;
-}
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    }
 #deleteDataBtn:disabled, #downloadCsvBtn:disabled {
-  background-color: #ccc;
-  cursor: not-allowed;
+    background-color: #ccc;
+    cursor: not-allowed;
 }
 .dataTable-container {
     display: none;
@@ -326,49 +345,41 @@ input {
     border-radius: 5px;
 }
 #dataTable {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 12px;
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
 }
 #dataTable th, #dataTable td {
-  border: 1px solid #ddd;
-  padding: 8px;
-  text-align: center;
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: center;
 }
 #dataTable th {
-  background-color: #577cbd;
-  color: white;
+    background-color: #577cbd;
+    color: white;
 }
 #dataTable tbody tr:nth-child(even) {background-color: #f9f9f9;}
-
-#open-download-modal, #download-table, #download-chart {
-    border-radius: 5px;
-    color: #fff;
-    background-color:#1e3c72;
-    padding: 5px;
-    margin-right: 5px;
+.option-group, .button-group {
+    display: flex;
+    justify-content: space-around;
+    margin: 10px 0;
+}
+.option-group label {
+    display: flex;
+    white-space: nowrap;
+    gap: 5px;
     cursor: pointer;
 }
-.option-group {
-  display: flex;
-  justify-content: space-around;
-  margin: 15px 0;
-}
-#barangay-select-section {
-  max-height: 180px;
-  overflow-y: auto;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  padding: 10px;
-  background: #fafafa;
-  margin-bottom: 15px;
-}
-#barangay-wide-list label {
-  display: block;
-  padding: 4px 0;
-}
 
-.search-spinner {
+.loading {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width:100%;
+    height:100%;
+}
+.search-spinner, .filters-spinner {
     border: 4px solid #f3f3f3;
     border-top: 4px solid #577cbd;
     border-radius: 50%;
