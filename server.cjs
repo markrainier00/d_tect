@@ -39,7 +39,7 @@ app.get('/reset.html', (req, res) => {
   res.sendFile(path.join(__dirname, 'reset.html'));
 });
 
-// SignUp Process
+// Sign up
 app.post("/dtect/signup", async (req, res) => {
   const { email, password, role, first_name, last_name } = req.body;
 
@@ -54,11 +54,9 @@ app.post("/dtect/signup", async (req, res) => {
           last_name,
           role,
         },
+        emailRedirectTo: "https://dtect-production.up.railway.app/account.html"
       },
-    },
-  {
-    redirectTo: 'http://dtect-production.up.railway.app/account.html?confirmed=true'
-  });
+    });
 
     if (signupError) {
       console.error('Signup error:', signupError);
@@ -69,27 +67,37 @@ app.post("/dtect/signup", async (req, res) => {
     if (!user || !user.id) {
       return res.status(500).json({ success: false, message: "User ID not found after signup" });
     }
-
-    const { error: profileInsertError } = await supabaseClient.from("profiles").insert([
-      {
-        id: user.id,
-        email,
-        first_name,
-        last_name,
-        role,
-        is_enabled: false, 
-      },
-    ]);
-
-    if (profileInsertError) {
-      console.error("Error inserting into profiles:", profileInsertError);
-      return res.status(500).json({ success: false, message: "Failed to create user profile" });
-    }
-
-    res.status(200).json({ success: true });
+    res.status(200).json({ success: true, message: "Signup successful! Please check your email to confirm." });
   } catch (err) {
     console.error('Server error during signup:', err);
     res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// Endpoint to check email confirmation status
+app.get("/dtect/check-confirmation/:email", async (req, res) => {
+  const { email } = req.params;
+
+  try {
+    const { data: { users }, error } = await supabaseClient.auth.admin.listUsers();
+
+    if (error) {
+      return res.status(500).json({ success: false, message: "Error checking confirmation status" });
+    }
+
+    const user = users.find((u) => u.email === email);
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    res.json({
+      success: true,
+      confirmed: !!user.email_confirmed_at,
+      confirmedAt: user.email_confirmed_at,
+    });
+  } catch (error) {
+    console.error("Confirmation check error:", error);
+    res.status(500).json({ success: false, message: "Internal server error" });
   }
 });
 
@@ -215,50 +223,6 @@ app.post("/dtect/verify-superadmin", async (req, res) => {
 app.get("/logout", (req, res) => {
   res.clearCookie("access_token");
   res.redirect("/");
-});
-
-// Endpoint to check email confirmation status
-app.get("/dtect/check-confirmation/:email", async (req, res) => {
-  const { email } = req.params;
-
-  try {
-    // Query the user to check confirmation status
-    const { data: { users }, error } = await supabaseClient.auth.admin.listUsers();
-
-    if (error) {
-      return res.status(500).json({ success: false, message: "Error checking confirmation status" });
-    }
-
-    const user = users.find((u) => u.email === email);
-    if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
-    }
-
-    res.json({
-      success: true,
-      confirmed: !!user.email_confirmed_at,
-      confirmedAt: user.email_confirmed_at,
-    });
-  } catch (error) {
-    console.error("Confirmation check error:", error);
-    res.status(500).json({ success: false, message: "Internal server error" });
-  }
-});
-
-// Endpoint to handle email confirmation callback
-app.get("/dtect/confirm-email", async (req, res) => {
-  const { token, type } = req.query;
-
-  try {
-    if (type === "signup") {
-      res.redirect("/account.html?confirmed=true");
-    } else {
-      res.status(400).json({ success: false, message: "Invalid confirmation type" });
-    }
-  } catch (error) {
-    console.error("Email confirmation error:", error);
-    res.status(500).json({ success: false, message: "Internal server error" });
-  }
 });
 
 // =========RESET PASSWORD=========
@@ -908,18 +872,29 @@ app.delete('/api/users/:id', async (req, res) => {
   const userId = req.params.id;
 
   try {
-    const { error } = await supabaseClient
+    const { error: profileError } = await supabaseClient
       .from('profiles')
       .delete()
       .eq('id', userId);
+    
+    if (profileError) {
+      console.error('Profile deletion error:', profileError);
+    }
 
-    if (error) throw error;
+    const { error: authError } = await supabaseClient.auth.admin.deleteUser(userId);
+    if (authError) {
+      console.error('Auth deletion error:', authError);
+      throw authError; // stop if auth deletion fails
+    }
 
-    res.json({ success: true });
+    res.json({ success: true, message: 'User deleted from profiles and auth.' });
+
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Unexpected error:', err);
+    res.status(500).json({ error: err.message || JSON.stringify(err) });
   }
 });
+
 
 
 

@@ -42,9 +42,9 @@
                 <div class="form-group">
                     <select id="user-role" required>
                         <option value="" disabled selected>Select your role</option>
-                        <option value="healthcare">Healthcare Staff</option>
-                        <option value="admin">System Administrator</option>
-                        <option value="superadmin">Account Administrator</option>
+                        <option value="Healthcare Staff">Healthcare Staff</option>
+                        <option value="System Administrator">System Administrator</option>
+                        <option value="Account Administrator">Account Administrator</option>
                     </select>
                 </div>
                 <button type="submit" class="signup-submit-btn">Sign Up</button>
@@ -60,6 +60,15 @@
         </form>
     </div>
 
+    <div id="confirmation-modal" class="modal">
+        <div class="confirmation-content">
+            <h2>Email Confirmed</h2>
+            <p>Your account is now verified.
+                <br>Please wait for your account to be approved
+                <br>by Account Administrator before logging in.
+            </p>
+        </div>
+    </div>
 <script src="js/account.js"></script>
 </body>
 </html>

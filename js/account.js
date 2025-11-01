@@ -7,6 +7,18 @@ document.addEventListener("DOMContentLoaded", () => {
     const loginForm = document.getElementById('login-form');
     const signupForm = document.getElementById('signup-form');
     const forgotForm = document.getElementById('forgot-form');
+    const params = new URLSearchParams(window.location.search);
+    const isConfirmed = params.get("confirmed") === "true";
+    const confirmationModal = document.getElementById("confirmation-modal");
+
+    if (isConfirmed && confirmationModal) {
+        confirmationModal.style.display = "flex";
+
+        setTimeout(() => {
+            confirmationModal.style.display = "none"
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }, 3000);
+    }
 
     // Open Modals
     if (signupBtn && signup) {
@@ -54,7 +66,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (data.success) {
                     const role = data.user.role;
 
-                    if (['admin', 'healthcare', 'superadmin'].includes(role)) {
+                    if (['Healthcare Staff', 'System Administrator', 'Account Administrator', 'superadmin'].includes(role)) {
                         window.location.href = '/private';
                     } else {
                         alert("You don't have access to this system.");
