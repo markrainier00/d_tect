@@ -104,8 +104,8 @@ a:visited {
     position: relative;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
 }
-.modal, .modal-content h2 {text-align: center;}
-
+.modal, .modal-content h2 { text-align: center; }
+.modal-content h2 { color: #1e3c72; }
 /* Inputs and select inside modal */
 .name {
     display: flex;

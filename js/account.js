@@ -8,7 +8,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const signupForm = document.getElementById('signup-form');
     const forgotForm = document.getElementById('forgot-form');
     const params = new URLSearchParams(window.location.search);
-    const isConfirmed = params.get("confirmed") === "true";
+    const isConfirmed = params.get("status") === "confirmed";
     const confirmationModal = document.getElementById("confirmation-modal");
 
     if (isConfirmed && confirmationModal) {

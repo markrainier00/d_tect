@@ -146,36 +146,22 @@ header h5 {
 .table{
     width: 100%;
     border-collapse: collapse;
-    border-spacing: 0;
-    background: #fff;
-    font-size: 1em;
-    overflow: hidden;
-    display: block;
+    font-size: small;
 }
 .table-container {
     width: 100%;
     max-height: 300px;
-    overflow-y: hidden;
+    overflow-x: auto;
+    overflow-y: auto;
     margin: 0 auto 18px auto;
     background: #fff;
     border-radius: 10px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
-    font-size: 1em;
-}
-.table tbody {
-    display: block;
-}
-.table tbody {
-    max-height: 300px;
-    overflow-y: auto;
-    overflow-x: hidden;
 }
 .table th, .table td {
-    width: 25%;
     padding: 12px 10px;
+    white-space: nowrap;
     text-align: left;
-    box-sizing: border-box;
-    word-wrap: break-word;
 }
 .table th {
     width: 25%;
@@ -185,11 +171,6 @@ header h5 {
     background: #577cbd;
     color: white;
     font-weight: 700;
-}
-.table thead, tr {
-    display: table;
-    table-layout: fixed;
-    width: 100%;
 }
 td.centered { text-align: center; }
 .table tr:nth-child(even) {
