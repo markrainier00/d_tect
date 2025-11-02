@@ -23,17 +23,11 @@ app.use(express.static(path.join(__dirname)));
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'main.html'));
 });
-app.get('/staff', (req, res) => {
-  res.sendFile(path.join(__dirname, 'staff.html'));
-});
 app.get('/signup_success', (req, res) => {
   res.sendFile(path.join(__dirname, 'signup_success.html'));
 });
 app.get('/account', (req, res) => {
   res.sendFile(path.join(__dirname, 'account.html'));
-});
-app.get('/staff.html', (req, res) => {
-  res.sendFile(path.join(__dirname, 'staff.html'));
 });
 app.get('/reset.html', (req, res) => {
   res.sendFile(path.join(__dirname, 'reset.html'));
@@ -195,7 +189,7 @@ app.get("/private", async (req, res) => {
   const role = user.user_metadata?.role;
   if (role === "healthcare") {
     res.sendFile(path.join(__dirname, "staff.html"));
-  } else if (role === "admin") {
+  } else if (role === "System Administrator") {
       res.sendFile(path.join(__dirname, "admin.html"));
   } else if (role === "superadmin") {
       res.sendFile(path.join(__dirname, "superadmin.html"));
