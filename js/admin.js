@@ -19,6 +19,7 @@ async function verifyAuthToken() {
         window.location.href = "/";
     }
 }
+verifyAuthToken();
 
 async function fetchContent() {
     try {
@@ -183,7 +184,6 @@ function attachRowEventListeners() {
 }
 
 document.addEventListener('DOMContentLoaded', () => { 
-    verifyAuthToken();
     fetchContent();
     resizeAllTextareas();
     

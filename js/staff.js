@@ -13,10 +13,10 @@ async function verifyAuthToken() {
         console.error("Auth check failed:", err);
         window.location.href = "/";
     }
-}
+} 
+verifyAuthToken();
 
-document.addEventListener('DOMContentLoaded', () => {  
-    verifyAuthToken();
+document.addEventListener('DOMContentLoaded', () => { 
     const spinnerText = document.getElementById("spinner-text");
     const spinner = document.getElementById("spinner");
     const loadingModal = document.getElementById('loading');

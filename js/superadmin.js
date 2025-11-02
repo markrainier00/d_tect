@@ -19,6 +19,8 @@ async function verifySuperAdmin() {
         window.location.href = "/";
     }
 }
+verifySuperAdmin();
+
 async function fetchUsers() {
     try {
         const response = await fetch('/api/users');
@@ -116,7 +118,6 @@ async function fetchLogs() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    verifySuperAdmin();
     fetchUsers();
     fetchLogs();
     
