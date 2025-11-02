@@ -29,7 +29,7 @@ app.get('/staff', (req, res) => {
 app.get('/signup_success', (req, res) => {
   res.sendFile(path.join(__dirname, 'signup_success.html'));
 });
-app.get('/account.html', (req, res) => {
+app.get('/account', (req, res) => {
   res.sendFile(path.join(__dirname, 'account.html'));
 });
 app.get('/staff.html', (req, res) => {
@@ -54,7 +54,7 @@ app.post("/dtect/signup", async (req, res) => {
           last_name,
           role,
         },
-        emailRedirectTo: "https://dtect-production.up.railway.app/account.html"
+        emailRedirectTo: "http://localhost:3000/account.html?status=confirmed"
       },
     });
 
