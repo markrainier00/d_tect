@@ -9,13 +9,21 @@ document.addEventListener("DOMContentLoaded", () => {
     const forgotForm = document.getElementById('forgot-form');
     const params = new URLSearchParams(window.location.search);
     const isConfirmed = params.get("status") === "confirmed";
-    const confirmationModal = document.getElementById("confirmation-modal");
+    const statusModal = document.getElementById("status-modal");
+    const statusTitle = document.getElementById('status-title');
+    const statusContent = document.getElementById('status-content');
 
-    if (isConfirmed && confirmationModal) {
-        confirmationModal.style.display = "flex";
+    if (isConfirmed && statusModal) {
+        statusTitle.innerHTML = `Email Confirmed`;
+        statusContent.innerHTML = `
+            <br>Please wait for your account to be approved
+            <br>by an Account Administrator before logging in.`;
+        statusModal.style.display = "flex";
 
         setTimeout(() => {
-            confirmationModal.style.display = "none"
+            statusModal.style.display = "none"
+            statusTitle.innerHTML = ``;
+            statusContent.innerHTML = ``;
             window.history.replaceState({}, document.title, window.location.pathname);
         }, 3000);
     }
@@ -69,14 +77,36 @@ document.addEventListener("DOMContentLoaded", () => {
                     if (['Healthcare Staff', 'System Administrator', 'Account Administrator', 'superadmin'].includes(role)) {
                         window.location.href = '/private';
                     } else {
-                        alert("You don't have access to this system.");
+                        statusTitle.innerHTML = `Log In Error`;
+                        statusContent.innerHTML = `You don't have access to this system.`;
+                        
+                        setTimeout(() => {
+                            statusModal.style.display = "none"
+                            statusTitle.innerHTML = ``;
+                            statusContent.innerHTML = ``;
+                        }, 3000);
                     }
                 } else {
-                    alert(data.message || "Login failed.");
+                    statusTitle.innerHTML = `Log In Error`;
+                    statusContent.innerHTML = `An error occured during log in.`;
+                    
+                    setTimeout(() => {
+                        statusModal.style.display = "none"
+                        statusTitle.innerHTML = ``;
+                        statusContent.innerHTML = ``;
+                    }, 3000);
                 }
             } catch (error) {
                 console.error("Login error:", error);
-                alert("An error occurred during login.");
+
+                statusTitle.innerHTML = `Log In Error`;
+                statusContent.innerHTML = `An error occured during log in.`;
+
+                setTimeout(() => {
+                    statusModal.style.display = "none"
+                    statusTitle.innerHTML = ``;
+                    statusContent.innerHTML = ``;
+                }, 3000);
             }
         });
     }
@@ -110,16 +140,40 @@ document.addEventListener("DOMContentLoaded", () => {
                 const result = await response.json();
 
                 if (!response.ok || !result.success) {
-                    alert(result.message || 'Sign up failed');
+                    statusTitle.innerHTML = `Sign Up Error`;
+                    statusContent.innerHTML = `An error occured during sign up.`;
+
+                    setTimeout(() => {
+                        statusModal.style.display = "none"
+                        statusTitle.innerHTML = ``;
+                        statusContent.innerHTML = ``;
+                    }, 3000);
                     return;
                 }
 
-                alert('Signed up successfully! Please check your email for confirmation.');
+                statusTitle.innerHTML = `Signed Up Successfully`;
+                statusContent.innerHTML = `Please check your email for confirmation.`;
+
+                setTimeout(() => {
+                    statusModal.style.display = "none"
+                    statusTitle.innerHTML = ``;
+                    statusContent.innerHTML = ``;
+                }, 3000);
                 signupForm.reset();
                 signup.style.display = 'none';
             } catch (error) {
                 console.error('Sign up error:', error);
-                alert('Something went wrong during sign up.');
+
+                statusTitle.innerHTML = `Sign Up Error`;
+                statusContent.innerHTML = `Something went wrong during sign up.`;
+
+                setTimeout(() => {
+                    statusModal.style.display = "none"
+                    statusTitle.innerHTML = ``;
+                    statusContent.innerHTML = ``;
+                }, 3000);
+                signupForm.reset();
+                signup.style.display = 'none';
             }
         });
     }
@@ -130,16 +184,35 @@ document.addEventListener("DOMContentLoaded", () => {
             e.preventDefault();
             
             const email = forgotPassword.querySelector('#reset-email').value;
-            
-            const res = await fetch('/api/reset-password', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email })
-            });
+            try {
+                const res = await fetch('/api/reset-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
 
-            alert('A password reset link has been sent to your email.');
-            forgotPassword.style.display = 'none';
-            forgotForm.reset();
+                const data = await res.json();
+
+                if (!res.ok || !data.success) throw new Error(data.message || 'Password reset failed');
+
+                statusTitle.innerHTML = `Reset Password`;
+                statusContent.innerHTML = `A password reset link has been sent to your email.`;
+            }
+            catch {
+                statusTitle.innerHTML = `Reset Password Failed`;
+                statusContent.innerHTML = `An error occured during password reset.`;
+            }
+            finally {
+                statusModal.style.display = "flex";
+                setTimeout(() => {
+                    statusModal.style.display = "none";
+                    statusTitle.innerHTML = ``;
+                    statusContent.innerHTML = ``;
+                }, 3000);
+
+                forgotPassword.style.display = 'none';
+                forgotForm.reset();
+            }
         });
     }
 });

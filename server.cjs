@@ -23,13 +23,10 @@ app.use(express.static(path.join(__dirname)));
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'main.html'));
 });
-app.get('/signup_success', (req, res) => {
-  res.sendFile(path.join(__dirname, 'signup_success.html'));
-});
 app.get('/account', (req, res) => {
   res.sendFile(path.join(__dirname, 'account.html'));
 });
-app.get('/reset.html', (req, res) => {
+app.get('/reset', (req, res) => {
   res.sendFile(path.join(__dirname, 'reset.html'));
 });
 
@@ -48,7 +45,7 @@ app.post("/dtect/signup", async (req, res) => {
           last_name,
           role,
         },
-        emailRedirectTo: "http://localhost:3000/account.html?status=confirmed"
+        emailRedirectTo: "https://www.dtectsystem.online/account?status=confirmed"
       },
     });
 
@@ -229,7 +226,7 @@ app.post('/api/reset-password', async (req, res) => {
 
   try {
     const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
-      redirectTo: '/reset.html'
+      redirectTo: '/reset'
     });
 
     if (error) throw error;
@@ -449,7 +446,7 @@ app.post("/api/upload", async (req, res) => {
       inserted.weather = true;
     }
 
-    await fetch('https://dtect-production.up.railway.app/forecast');
+    await fetch('https://www.dtectsystem.online/forecast');
 
     res.json({ message: "Uploaded successfully" });
   } catch (err) {
@@ -559,7 +556,7 @@ app.post('/api/deleteRecords', async (req, res) => {
       if (data.length < batchSize) break;
     }
 
-    await fetch('https://dtect-production.up.railway.app/forecast');
+    await fetch('https://www.dtectsystem.online/forecast');
 
     res.json({ success: true });
   } catch (err) {
