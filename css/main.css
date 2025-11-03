@@ -238,8 +238,7 @@ header h5 {
 }
 .barangay-list, .forecast-list {
     flex: 1 1 0;
-    min-width: 150px;
-    min-width: 150px;
+    min-width: 300px;
     height: 400px;
     overflow-y: auto;
     display: flex;
@@ -290,8 +289,7 @@ header h5 {
 .forecast-card {
     min-height: 250px;
     max-height: 400px;
-    min-width: 200px;
-    min-width: 200px;
+    min-width: 300px;
     max-width: 500px;
     display: flex;
     flex-direction: column;
@@ -456,9 +454,15 @@ header h5 {
         padding: 18px 8px 16px 8px;
         max-width: 95vw;
     }
-    #barangay-map2, #forecast-map {
+}
+@media (max-width: 420px) {
+    #barangay-map2, #forecast-map, .barangay-list, .forecast-list {
         min-width: 150px;
     }
+    .forecast-card {
+        min-width: 200px;
+    }
+    
 }
 
  /* Modal */
