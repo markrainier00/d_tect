@@ -255,7 +255,6 @@ header h5 {
     border-radius: 10px;
     border: 2px solid #ccc;
     margin: 10px;
-    margin: 10px;
 }
 .barangay-card {
     max-width: 500px;
@@ -456,6 +455,9 @@ header h5 {
     .modal-content {
         padding: 18px 8px 16px 8px;
         max-width: 95vw;
+    }
+    #barangay-map2, #forecast-map {
+        min-width: 150px;
     }
 }
 
