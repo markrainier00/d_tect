@@ -254,6 +254,7 @@ function attachRowEventListeners() {
         });
     });
 }
+window.addEventListener('resize', resizeAllTextareas);
 
 document.addEventListener('DOMContentLoaded', () => { 
     fetchContent();
