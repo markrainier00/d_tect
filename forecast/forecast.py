@@ -2,10 +2,11 @@ import warnings
 warnings.filterwarnings("ignore")
 from supabase import create_client
 import pandas as pd
-from xgboost import XGBRegressor
-import numpy as np
-import json
-import sys
+from sklearn.preprocessing import LabelEncoder
+from sklearn.model_selection import train_test_split
+from imblearn.over_sampling import SMOTE
+from xgboost import XGBClassifier
+from datetime import datetime, timedelta, date
 import os
 
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
@@ -13,7 +14,6 @@ SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
 
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-# === HELPERS ===
 def fetch_table(table_name, batch_size=1000):
     all_data = []
     start = 0
@@ -34,8 +34,10 @@ def fetch_table(table_name, batch_size=1000):
         df = df.drop(columns=["id"])
     return df
 
+def get_iso_weeks(year):
+    return date(year, 12, 28).isocalendar()[1]
+
 def main():
-    # Fetch all tables
     rate_df = fetch_table("rate_and_classification")
     pop_df = fetch_table("population_records")
     weather_df = fetch_table("weather_records")
@@ -58,106 +60,153 @@ def main():
         how="left"
     )
 
-    merged["date"] = pd.to_datetime(
-        merged["Year"].astype(str) + merged["Week"].astype(str) + "1",
-        format="%Y%W%w"
+    merged["date"] = merged.apply(
+        lambda row: datetime.fromisocalendar(int(row["Year"]), int(row["Week"]), 1),
+        axis=1
     )
     merged = merged.sort_values(["Barangay", "date"]).reset_index(drop=True)
+    merged["month_num"] = merged["date"].dt.month
+    merged["week_num"] = merged["date"].dt.isocalendar().week.astype(int)
 
     # Truncate old forecast results
     supabase.table("forecast_results").delete().neq("Barangay", "").execute()
 
-    all_results = []
+    X = merged[[
+        "Barangay", "Year", "Week", "Population",
+        "average_weekly_temperature",
+        "average_weekly_relative_humidity",
+        "total_weekly_rainfall",
+        "average_weekly_wind_speed",
+        "average_weekly_wind_direction",
+        "month_num", "week_num"
+    ]]
 
-    # Forecast per Barangay
-    for brgy in merged["Barangay"].unique():
-        brgy_df = merged[merged["Barangay"] == brgy].dropna(subset=["Cases"])
+    y = merged["risk_classification"]
+
+    # Encode categorical Barangay and target
+    le_barangay = LabelEncoder()
+    X["Barangay"] = le_barangay.fit_transform(X["Barangay"])
+
+    le_risk = LabelEncoder()
+    y_encoded = le_risk.fit_transform(y)
+
+    # Split dataset
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y_encoded, test_size=0.2, random_state=42, stratify=y_encoded
+    )
+
+    smote = SMOTE(random_state=42)
+    X_balanced, y_balanced = smote.fit_resample(X_train, y_train)
+
+    model = XGBClassifier(
+        objective="multi:softmax",
+        num_class=len(le_risk.classes_),
+        n_estimators=300,
+        learning_rate=0.05,
+        max_depth=5,
+        subsample=0.8,
+        colsample_bytree=0.8,
+        eval_metric="mlogloss",
+        random_state=42
+    )
+    model.fit(X_balanced, y_balanced)
+    
+    # y_pred = model.predict(X_test)
+
+    barangays = pop_df["Barangay"].unique()
+    today = datetime.today()
+    current_year, current_week, _ = today.isocalendar()
+
+    future_weeks_list = []
+    for i in range(10):
+        week = current_week + i
+        year = current_year
         
-        if len(brgy_df) < 3:
-            continue
+        max_week = get_iso_weeks(year)
+        while week > max_week:
+            week -= max_week
+            year += 1
 
-        brgy_df["cases_lag1"] = brgy_df["Cases"].shift(1)
-        brgy_df["cases_lag2"] = brgy_df["Cases"].shift(2)
-        brgy_df["month_num"] = brgy_df["date"].dt.month
-        brgy_df["week_num"] = brgy_df["date"].dt.isocalendar().week.astype(int)
-        brgy_df = brgy_df.dropna()
+        for b in barangays:
+            population = pop_df[pop_df["Barangay"] == b]["Population"].iloc[-1]
+            future_weeks_list.append({
+                "Barangay": b,
+                "Year": year,
+                "Week": week,
+                "Population": population
+            })
 
-        features = [
+    future_weeks = pd.DataFrame(future_weeks_list)
+
+    weekly_avg_weather = weather_df.groupby('Week', as_index=False).agg({
+        'average_weekly_temperature': 'mean',
+        'average_weekly_relative_humidity': 'mean',
+        'total_weekly_rainfall': 'mean',
+        'average_weekly_wind_speed': 'mean',
+        'average_weekly_wind_direction': 'mean'
+    })
+
+    # Merge with historical averages
+    future_weather = future_weeks.merge(
+        weekly_avg_weather,
+        on="Week",
+        how="left"
+    )
+
+    # Add month and week number columns
+    future_weather["month_num"] = future_weather.apply(
+        lambda row: datetime.fromisocalendar(int(row["Year"]), int(row["Week"]), 1).month,
+        axis=1
+    )
+
+    future_weather["week_num"] = future_weather["Week"]
+
+    # Encode Barangay
+    future_weather["Barangay"] = le_barangay.transform(future_weather["Barangay"])
+    
+    pred_encoded = model.predict(future_weather)
+    pred_label = le_risk.inverse_transform(pred_encoded)
+    future_weather["predicted_risk"] = pred_label
+
+    # Clean the table
+    future_weather["Barangay"] = le_barangay.inverse_transform(future_weather["Barangay"])
+
+    weather_cols = [
+        "average_weekly_temperature",
+        "average_weekly_relative_humidity",
+        "total_weekly_rainfall",
+        "average_weekly_wind_speed",
+        "average_weekly_wind_direction"
+    ]
+    future_weather[weather_cols] = future_weather[weather_cols].round(2)
+
+    def week_start_end(year, week):
+        start_date = datetime.fromisocalendar(year, week, 1)  # Monday
+        end_date = start_date + timedelta(days=6)             # Sunday
+        return f"{start_date.date()} to {end_date.date()}"
+
+    future_weather["week_range"] = future_weather.apply(
+        lambda row: week_start_end(row["Year"], row["Week"]),
+        axis=1
+    )
+
+    future_weather = future_weather.drop(columns=["Year", "Week", "month_num", "week_num"])
+
+    # Reorder columns nicely
+    cols = ["Barangay", "week_range", "Population",
             "average_weekly_temperature",
             "average_weekly_relative_humidity",
             "total_weekly_rainfall",
             "average_weekly_wind_speed",
-            "cases_lag1",
-            "cases_lag2",
-            "month_num",
-            "week_num"
-        ]
+            "average_weekly_wind_direction",
+            "predicted_risk"]
 
-        X = brgy_df[features]
-        y = brgy_df["Cases"]
-
-        model = XGBRegressor(
-            n_estimators=300,
-            learning_rate=0.05,
-            max_depth=5,
-            subsample=0.8,
-            colsample_bytree=0.8,
-            random_state=42
-        )
-        model.fit(X, y)
-
-        last_row = brgy_df.iloc[-1].copy()
-        preds = []
-
-        
-        current_week_start = pd.Timestamp.now() - pd.to_timedelta(pd.Timestamp.now().weekday(), unit='d')
-
-        for i in range(10):
-            next_date = current_week_start + pd.Timedelta(weeks=i)
-            last_row["date"] = next_date
-            
-            features_row = last_row[features]
-
-            pred = float(model.predict(features_row.values.reshape(1, -1))[0])
-            pred = max(0, round(pred))
-            preds.append({
-                "Barangay": brgy,
-                "date": next_date.strftime("%Y-%m-%d"),
-                "forecasted_cases": pred
-            })
-
-            # Update lags for next iteration
-            last_row["cases_lag2"] = last_row["cases_lag1"]
-            last_row["cases_lag1"] = pred
-
-        all_results.extend(preds)
-
-    all_results = pd.DataFrame(all_results)
-
-    # === Compute Risk Levels ===
-    if not all_results.empty:
-        # Merge mean and std from historical data
-        stats = merged.groupby("Barangay")["Cases"].agg(["mean", "std"]).reset_index()
-        all_results = all_results.merge(stats, on="Barangay", how="left")
-
-        def assign_risk_level(row):
-            if pd.isna(row["std"]):
-                return "Insufficient Data"
-            if row["forecasted_cases"] > row["mean"] + 2 * row["std"]:
-                return "High Risk"
-            elif row["forecasted_cases"] > row["mean"] + row["std"]:
-                return "Moderate Risk"
-            else:
-                return "Low Risk"
-
-        all_results["risk_level"] = all_results.apply(assign_risk_level, axis=1)
-        all_results = all_results[["Barangay", "date", "forecasted_cases", "risk_level"]]
-
-        # Insert into Supabase (batch insert to avoid rate limits)
-        batch_size = 100
-        for i in range(0, len(all_results), batch_size):
-            batch = all_results.iloc[i:i+batch_size].to_dict(orient="records")
-            supabase.table("forecast_results").insert(batch).execute()
+    future_weather = future_weather[cols]
+    
+    batch_size = 100
+    for i in range(0, len(future_weather), batch_size):
+        batch = future_weather.iloc[i:i+batch_size].to_dict(orient="records")
+        supabase.table("forecast_results").insert(batch).execute()
 
 
 if __name__ == "__main__":

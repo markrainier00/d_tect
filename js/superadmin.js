@@ -1,9 +1,16 @@
 const usersTable = document.querySelector('#usersTable tbody')
 const logTable = document.querySelector('#logTable tbody')
+let deleteUserId = null;
+const deleteModal = document.getElementById('deleteModal');
+const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
+const statusModal = document.getElementById("status-modal");
+const statusTitle = document.getElementById('status-title');
+const statusContent = document.getElementById('status-content');
 
-async function verifySuperAdmin() {
+async function verifyAuthToken() {
     try {
-        const res = await fetch('/dtect/verify-superadmin', {
+        const res = await fetch('/dtect/verify-auth', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include'
@@ -15,11 +22,73 @@ async function verifySuperAdmin() {
             window.location.href = "/";
         }
     } catch (err) {
-        console.error("Error verifying superadmin:", err);
         window.location.href = "/";
     }
 }
-verifySuperAdmin();
+verifyAuthToken();
+
+function showStatus(title, message, options = {}) {
+    const {
+        duration = 3000,
+        showButton = false,
+        buttonText = "Okay",
+        callback = null,
+        cancelButtonText = null,
+        cancelCallback = null
+    } = options;
+
+    if (!statusModal || !statusTitle || !statusContent) return;
+
+    statusTitle.innerHTML = title;
+    statusContent.innerHTML = message;
+
+    const confirmBtn = document.getElementById("status-ok-btn");
+    const cancelBtn = document.getElementById("status-cancel-btn");
+
+    confirmBtn.style.display = "none";
+    cancelBtn.style.display = "none";
+
+    const newConfirm = confirmBtn.cloneNode(true);
+    const newCancel = cancelBtn.cloneNode(true);
+    confirmBtn.parentNode.replaceChild(newConfirm, confirmBtn);
+    cancelBtn.parentNode.replaceChild(newCancel, cancelBtn);
+
+    const okButton = document.getElementById("status-ok-btn");
+    const cancelButton = document.getElementById("status-cancel-btn");
+
+    if (showButton) {
+        okButton.textContent = buttonText;
+        okButton.style.display = "inline-block";
+        okButton.addEventListener("click", () => {
+            statusModal.style.display = "none";
+            statusTitle.innerHTML = "";
+            statusContent.innerHTML = "";
+            if (typeof callback === "function") callback();
+        });
+
+        if (cancelButtonText) {
+            cancelButton.textContent = cancelButtonText;
+            cancelButton.style.display = "inline-block";
+            cancelButton.addEventListener("click", () => {
+                statusModal.style.display = "none";
+                statusTitle.innerHTML = "";
+                statusContent.innerHTML = "";
+                if (typeof cancelCallback === "function") cancelCallback();
+            });
+        }
+    }
+
+    statusModal.style.display = "flex";
+
+    if (!showButton) {
+        setTimeout(() => {
+            statusModal.style.display = "none";
+            statusTitle.innerHTML = "";
+            statusContent.innerHTML = "";
+            if (typeof callback === "function") callback();
+        }, duration);
+    }
+}
 
 async function fetchUsers() {
     try {
@@ -30,91 +99,94 @@ async function fetchUsers() {
         usersTable.innerHTML = '';
 
         data.forEach(user => {
+            const fullName = `${user.first_name} ${user.last_name}`;
+            const tr = document.createElement('tr');
+
+            const toggleSwitch = `
+                <div class="switch">
+                    <input type="checkbox" id="toggle-${user.id}" ${user.is_enabled ? 'checked' : ''} data-id="${user.id}">
+                    <label for="toggle-${user.id}"></label>
+                </div>
+            `;
+
+            tr.innerHTML = `
+                <td>${user.email}</td>
+                <td>${fullName}</td>
+                <td>${user.role}</td>
+                <td>${toggleSwitch}</td>
+                <td class="centered">
+                    <button data-id="${user.id}" class="delete-btn">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            `;
+
+            usersTable.appendChild(tr);
+
+            // Enable/Disable ssers
+            const toggleInput = tr.querySelector(`#toggle-${user.id}`);
+            toggleInput.addEventListener('change', async (e) => {
+                const userId = e.target.getAttribute('data-id');
+                const is_enabled = e.target.checked;
+                const previousState = !is_enabled;
+
+                try {
+                    const res = await fetch(`/api/users/${userId}/toggle`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ is_enabled })
+                    });
+
+                    const data = await res.json();
+                    const message = data.message;
+
+                    if (!res.ok || (data && data.success === false)) {
+                        throw new Error(data.message || 'Failed to update user status');
+                    }
+                    showStatus("D-TECT", message, { showButton: false });
+
+                } catch (err) {
+                    e.target.checked = previousState;
+                    showStatus("D-TECT", "Failed to update user status. Please check your connection and try again.", { showButton: true });
+                }
+            });
+
+            //Delete users
+            const deleteBtn = tr.querySelector('.delete-btn');
+            deleteBtn.addEventListener('click', () => {
+                deleteUserId = user.id;
+                deleteModal.style.display = 'block';
+            });
+        });
+
+
+    } catch (err) {
+        showStatus("D-TECT", "Unable to load users. Please try again later.", { showButton: true });
+    }
+}
+async function fetchLogs() {
+    try {
+        const res = await fetch('/api/logs');
+        if (!res.ok) throw new Error('Failed to fetch logs');
+
+        const data = await res.json();
+        logTable.innerHTML = ''; // clear existing rows
+
+        data.forEach(user => {
         const fullName = `${user.first_name} ${user.last_name}`;
         const tr = document.createElement('tr');
-
-        const toggleSwitch = `
-            <div class="switch">
-            <input type="checkbox" id="toggle-${user.id}" ${user.is_enabled ? 'checked' : ''} data-id="${user.id}">
-            <label for="toggle-${user.id}"></label>
-            </div>
-        `;
-
         tr.innerHTML = `
             <td>${user.email}</td>
             <td>${fullName}</td>
             <td>${user.role}</td>
-            <td>${toggleSwitch}</td>
-            <td class="centered">
-            <button data-id="${user.id}" class="delete-btn">
-                <i class="fas fa-trash"></i>
-            </button>
-            </td>
+            <td>${user.logged_in_at}</td> <!-- already formatted -->
         `;
-
-        usersTable.appendChild(tr);
-
-        const toggleInput = tr.querySelector(`#toggle-${user.id}`);
-        toggleInput.addEventListener('change', async (e) => {
-            const userId = e.target.getAttribute('data-id');
-            const is_enabled = e.target.checked;
-
-            try {
-            const res = await fetch(`/api/users/${userId}/toggle`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ is_enabled })
-            });
-
-            if (!res.ok) throw new Error('Failed to update user status');
-            } catch (err) {
-            alert('Error updating user: ' + err.message);
-            }
-        });
-        });
-
-        document.querySelectorAll('.delete-btn').forEach(button => {
-        button.addEventListener('click', async (e) => {
-            const userId = e.target.closest('button').getAttribute('data-id');
-            if (confirm('Are you sure you want to delete this user?')) {
-            try {
-                const res = await fetch(`/api/users/${userId}`, { method: 'DELETE' });
-                if (!res.ok) throw new Error('Failed to delete user');
-                fetchUsers(); // refresh list
-            } catch (err) {
-                alert('Error deleting user: ' + err.message);
-            }
-            }
-        });
+        logTable.appendChild(tr);
         });
 
     } catch (err) {
-        alert('Error fetching users: ' + err.message);
+        showStatus("D-TECT", "Failed to retrieve logs. Please refresh the page.", { showButton: true });
     }
-}
-async function fetchLogs() {
-  try {
-    const res = await fetch('/api/logs');
-    if (!res.ok) throw new Error('Failed to fetch logs');
-
-    const data = await res.json();
-    logTable.innerHTML = ''; // clear existing rows
-
-    data.forEach(user => {
-      const fullName = `${user.first_name} ${user.last_name}`;
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>${user.email}</td>
-        <td>${fullName}</td>
-        <td>${user.role}</td>
-        <td>${user.logged_in_at}</td> <!-- already formatted -->
-      `;
-      logTable.appendChild(tr);
-    });
-
-  } catch (err) {
-    alert('Error fetching logs: ' + err.message);
-  }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -133,20 +205,35 @@ document.addEventListener('DOMContentLoaded', () => {
             forgotPassword.style.display = 'flex';
         });
     }
-
+    
     // To Close Modals (click outside)
     window.addEventListener('click', (e) => {
         if (e.target === forgotPassword) {
             forgotPassword.style.display = 'none';
             forgotForm.reset();
         }
+        if (e.target === deleteModal) {
+            deleteModal.style.display = 'none';
+            deleteUserId = null;
+        }
     });
     
+    cancelDeleteBtn.addEventListener('click', () => {
+        deleteModal.style.display = 'none';
+        deleteUserId = null;
+    });
+
+    // Log out
     if (logout) {
         logout.addEventListener('click', () => {
-            if (confirm("Are you sure you want to log out?")) {
-                window.location.href = '/logout';
-            }
+            showStatus("Log Out", "Are you sure you want to log out?", {
+                showButton: true,
+                buttonText: "Log Out",
+                cancelButtonText: "Cancel",
+                callback: () => {
+                    window.location.href = '/logout';
+                }
+            });
         });
     }
     
@@ -156,32 +243,60 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             
             const email = forgotPassword.querySelector('#reset-email').value;
-            if (!email) {
-                alert('Please enter your email.');
-                return;
-            }
             
-            try {
-                const res = await fetch('/api/reset-password', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email })
-                });
+            showStatus("Reset Password", "You need to log out to reset your password. Proceed?", {
+                showButton: true,
+                buttonText: "Proceed",
+                cancelButtonText: "Cancel",
+                callback: async () => {
+                    try {
+                        const res = await fetch('/api/reset-password', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ email })
+                        });
 
-                const data = await res.json();
+                        const data = await res.json();
 
-                if (!res.ok) throw new Error(data.error || 'Failed to reset password');
+                        if (!res.ok) throw new Error(data.error || 'Failed to reset password');
 
-                if (confirm("You need to log out to reset your password.")) {
-                    alert(data.message);
-                    forgotPassword.style.display = 'none';
-                    forgotForm.reset();
-                    window.location.href = '/logout';
+                        showStatus("Reset Password", data.message, {
+                            showButton: false,
+                            callback: () => {
+                                forgotPassword.style.display = 'none';
+                                forgotForm.reset();
+                                window.location.href = '/logout';
+                            }
+                        });
+
+                    } catch (err) {
+                        showStatus("Error", err.message, { showButton: true });
+                    }
                 }
-
-            } catch (err) {
-                alert('Error: ' + err.message);
-            }
+            });
         });
     }
+    
+    // Confirm deletion
+    confirmDeleteBtn.addEventListener('click', async () => {
+        if (!deleteUserId) return;
+
+        try {
+            const res = await fetch(`/api/users/${deleteUserId}`, { method: 'DELETE' });
+            const data = await res.json();
+
+            if (!res.ok || (data && data.success === false)) {
+                throw new Error(data.message || 'Failed to delete user');
+            }
+            const message = data.message || 'User deleted successfully.';
+            showStatus("D-TECT", message, { showButton: false });
+
+            fetchUsers();
+        } catch (err) {
+            showStatus("D-TECT", err.message, { showButton: true });
+        } finally {
+            deleteModal.style.display = 'none';
+            deleteUserId = null;
+        }
+    });
 });

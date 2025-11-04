@@ -72,7 +72,6 @@
     <div id="upload-modal" class="modal">
         <div class="modal-content">
             <h2>Upload CSV Records</h2>
-
             <label for="barangay">Barangay:</label>
             <select id="barangay"></select>
 
@@ -139,14 +138,8 @@
     </div>
 
     <div id="downloadModal" class="modal">
-        <div class="modal-content">
-            <h3>Download Options</h3>
-
-            <div class="option-group">
-                <label><input type="radio" name="mode" value="barangay" checked /> Per Barangay</label>
-                <label><input type="radio" name="mode" value="citywide" /> City-Wide</label>
-            </div>
-
+        <div class="modal-content" id="download-modal-content">
+            <h2>Download Options</h2>
             <div id="barangay-select-section">
                 <h4>Select Barangays</h4>
                 <div class="filters" id="barangay-wide-list"></div>
@@ -155,6 +148,17 @@
             <div class="button-group">
                 <button id="download-table">Download Table</button>
                 <button id="download-chart">Download Chart</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="status-modal" class="modal">
+        <div class="modal-content" id="status-modal-content">
+            <h2 id="status-title"></h2>
+            <p id="status-content"></p>
+            <div class="status-buttons">
+                <button class="status-ok-btn" id="status-ok-btn">Confirm</button>
+                <button class="status-cancel-btn" id="status-cancel-btn">Cancel</button>
             </div>
         </div>
     </div>

@@ -13,19 +13,48 @@ document.addEventListener("DOMContentLoaded", () => {
     const statusTitle = document.getElementById('status-title');
     const statusContent = document.getElementById('status-content');
 
-    if (isConfirmed && statusModal) {
-        statusTitle.innerHTML = `Email Confirmed`;
-        statusContent.innerHTML = `
-            <br>Please wait for your account to be approved
-            <br>by an Account Administrator before logging in.`;
+    function showStatus(title, message, options = {}) {
+        const { duration = 3000, showButton = false, buttonText = "Okay", callback = null } = options;
+        if (!statusModal || !statusTitle || !statusContent) return;
+
+        statusTitle.innerHTML = title;
+        statusContent.innerHTML = message;
+
+        if (showButton) {
+            const btn = document.createElement("button");
+            btn.textContent = buttonText;
+            btn.classList.add("status-ok-btn");
+            btn.addEventListener("click", () => {
+                statusModal.style.display = "none";
+                statusTitle.innerHTML = "";
+                statusContent.innerHTML = "";
+                btn.remove();
+                if (typeof callback === "function") callback();
+            });
+            statusContent.appendChild(document.createElement("br"));
+            statusContent.appendChild(btn);
+        }
+
         statusModal.style.display = "flex";
 
-        setTimeout(() => {
-            statusModal.style.display = "none"
-            statusTitle.innerHTML = ``;
-            statusContent.innerHTML = ``;
-            window.history.replaceState({}, document.title, window.location.pathname);
-        }, 3000);
+        if (!showButton) {
+            setTimeout(() => {
+                statusModal.style.display = "none";
+                statusTitle.innerHTML = "";
+                statusContent.innerHTML = "";
+                if (typeof callback === "function") callback();
+            }, duration);
+        }
+    }
+
+    if (isConfirmed && statusModal) {
+        showStatus("Email Confirmed",`
+            <br>Please wait for your account to be approved
+            <br>by an Account Administrator before logging in.
+        `, { 
+            showButton: true,
+            callback: () => window.history.replaceState({}, document.title, window.location.pathname)
+        });
     }
 
     // Open Modals
@@ -70,43 +99,16 @@ document.addEventListener("DOMContentLoaded", () => {
                 });
 
                 const data = await response.json();
+                const message = data.message || "An error occurred during log in.";
 
                 if (data.success) {
-                    const role = data.user.role;
-
-                    if (['Healthcare Staff', 'System Administrator', 'Account Administrator', 'superadmin'].includes(role)) {
-                        window.location.href = '/private';
-                    } else {
-                        statusTitle.innerHTML = `Log In Error`;
-                        statusContent.innerHTML = `You don't have access to this system.`;
-                        
-                        setTimeout(() => {
-                            statusModal.style.display = "none"
-                            statusTitle.innerHTML = ``;
-                            statusContent.innerHTML = ``;
-                        }, 3000);
-                    }
+                    window.location.href = '/private';
                 } else {
-                    statusTitle.innerHTML = `Log In Error`;
-                    statusContent.innerHTML = `An error occured during log in.`;
-                    
-                    setTimeout(() => {
-                        statusModal.style.display = "none"
-                        statusTitle.innerHTML = ``;
-                        statusContent.innerHTML = ``;
-                    }, 3000);
+                    showStatus("Log In Failed", message, { showButton: true });
                 }
             } catch (error) {
                 console.error("Login error:", error);
-
-                statusTitle.innerHTML = `Log In Error`;
-                statusContent.innerHTML = `An error occured during log in.`;
-
-                setTimeout(() => {
-                    statusModal.style.display = "none"
-                    statusTitle.innerHTML = ``;
-                    statusContent.innerHTML = ``;
-                }, 3000);
+                showStatus("Log In Error",`An error occured during log in.`, { showButton: true });
             }
         });
     }
@@ -137,41 +139,18 @@ document.addEventListener("DOMContentLoaded", () => {
                     body: JSON.stringify({ email, password, first_name, last_name, role }),
                 });
 
-                const result = await response.json();
+                const data = await response.json();
+                const message = data.message || "An error occurred during log in.";
 
-                if (!response.ok || !result.success) {
-                    statusTitle.innerHTML = `Sign Up Error`;
-                    statusContent.innerHTML = `An error occured during sign up.`;
-
-                    setTimeout(() => {
-                        statusModal.style.display = "none"
-                        statusTitle.innerHTML = ``;
-                        statusContent.innerHTML = ``;
-                    }, 3000);
+                if (!response.ok || !data.success) {
+                    showStatus("Sign Up Error", message, { showButton: true });
                     return;
                 }
-
-                statusTitle.innerHTML = `Signed Up Successfully`;
-                statusContent.innerHTML = `Please check your email for confirmation.`;
-
-                setTimeout(() => {
-                    statusModal.style.display = "none"
-                    statusTitle.innerHTML = ``;
-                    statusContent.innerHTML = ``;
-                }, 3000);
-                signupForm.reset();
-                signup.style.display = 'none';
+                showStatus("Signed Up Successfully", message, { showButton: false });
             } catch (error) {
                 console.error('Sign up error:', error);
-
-                statusTitle.innerHTML = `Sign Up Error`;
-                statusContent.innerHTML = `Something went wrong during sign up.`;
-
-                setTimeout(() => {
-                    statusModal.style.display = "none"
-                    statusTitle.innerHTML = ``;
-                    statusContent.innerHTML = ``;
-                }, 3000);
+                showStatus("Sign Up Error",`Something went wrong during sign up.`, { showButton: true });
+            } finally {
                 signupForm.reset();
                 signup.style.display = 'none';
             }
@@ -192,24 +171,16 @@ document.addEventListener("DOMContentLoaded", () => {
                 });
 
                 const data = await res.json();
+                const message = data.message || "Password reset failed.";
 
-                if (!res.ok || !data.success) throw new Error(data.message || 'Password reset failed');
+                if (!res.ok || !data.success) throw new Error(message);
 
-                statusTitle.innerHTML = `Reset Password`;
-                statusContent.innerHTML = `A password reset link has been sent to your email.`;
+                showStatus("Reset Password", message, { showButton: false });
             }
             catch {
-                statusTitle.innerHTML = `Reset Password Failed`;
-                statusContent.innerHTML = `An error occured during password reset.`;
+                showStatus("Reset Password Failed",`An error occured during password reset.`, { showButton: true });
             }
             finally {
-                statusModal.style.display = "flex";
-                setTimeout(() => {
-                    statusModal.style.display = "none";
-                    statusTitle.innerHTML = ``;
-                    statusContent.innerHTML = ``;
-                }, 3000);
-
                 forgotPassword.style.display = 'none';
                 forgotForm.reset();
             }

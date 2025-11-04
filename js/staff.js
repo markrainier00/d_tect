@@ -1,3 +1,7 @@
+const statusModal = document.getElementById("status-modal");
+const statusTitle = document.getElementById('status-title');
+const statusContent = document.getElementById('status-content');
+
 async function verifyAuthToken() {
     try {
         const res = await fetch('/dtect/verify-auth', {
@@ -14,6 +18,70 @@ async function verifyAuthToken() {
         window.location.href = "/";
     }
 } 
+
+function showStatus(title, message, options = {}) {
+    const {
+        duration = 3000,
+        showButton = false,
+        buttonText = "Okay",
+        callback = null,
+        cancelButtonText = null,
+        cancelCallback = null
+    } = options;
+
+    if (!statusModal || !statusTitle || !statusContent) return;
+
+    statusTitle.innerHTML = title;
+    statusContent.innerHTML = message;
+
+    const confirmBtn = document.getElementById("status-ok-btn");
+    const cancelBtn = document.getElementById("status-cancel-btn");
+
+    confirmBtn.style.display = "none";
+    cancelBtn.style.display = "none";
+
+    const newConfirm = confirmBtn.cloneNode(true);
+    const newCancel = cancelBtn.cloneNode(true);
+    confirmBtn.parentNode.replaceChild(newConfirm, confirmBtn);
+    cancelBtn.parentNode.replaceChild(newCancel, cancelBtn);
+
+    const okButton = document.getElementById("status-ok-btn");
+    const cancelButton = document.getElementById("status-cancel-btn");
+
+    if (showButton) {
+        okButton.textContent = buttonText;
+        okButton.style.display = "inline-block";
+        okButton.addEventListener("click", () => {
+            statusModal.style.display = "none";
+            statusTitle.innerHTML = "";
+            statusContent.innerHTML = "";
+            if (typeof callback === "function") callback();
+        });
+
+        if (cancelButtonText) {
+            cancelButton.textContent = cancelButtonText;
+            cancelButton.style.display = "inline-block";
+            cancelButton.addEventListener("click", () => {
+                statusModal.style.display = "none";
+                statusTitle.innerHTML = "";
+                statusContent.innerHTML = "";
+                if (typeof cancelCallback === "function") cancelCallback();
+            });
+        }
+    }
+
+    statusModal.style.display = "flex";
+
+    if (!showButton) {
+        setTimeout(() => {
+            statusModal.style.display = "none";
+            statusTitle.innerHTML = "";
+            statusContent.innerHTML = "";
+            if (typeof callback === "function") callback();
+        }, duration);
+    }
+}
+
 verifyAuthToken();
 
 document.addEventListener('DOMContentLoaded', () => { 
@@ -144,43 +212,54 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             
             const email = forgotPassword.querySelector('#reset-email').value;
-            if (!email) {
-                alert('Please enter your email.');
-                return;
-            }
             
-            try {
-                const res = await fetch('/api/reset-password', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email })
-                });
+            showStatus("Reset Password", "You need to log out to reset your password. Proceed?", {
+                showButton: true,
+                buttonText: "Proceed",
+                cancelButtonText: "Cancel",
+                callback: async () => {
+                    try {
+                        const res = await fetch('/api/reset-password', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ email })
+                        });
 
-                const data = await res.json();
+                        const data = await res.json();
 
-                if (!res.ok) throw new Error(data.error || 'Failed to reset password');
+                        if (!res.ok) throw new Error(data.error || 'Failed to reset password');
 
-                if (confirm("You need to log out to reset your password.")) {
-                    alert(data.message);
-                    forgotPassword.style.display = 'none';
-                    forgotForm.reset();
-                    window.location.href = '/logout';
+                        showStatus("Reset Password", data.message, {
+                            showButton: false,
+                            callback: () => {
+                                forgotPassword.style.display = 'none';
+                                forgotForm.reset();
+                                window.location.href = '/logout';
+                            }
+                        });
+
+                    } catch (err) {
+                        showStatus("Error", err.message, { showButton: true });
+                    }
                 }
-
-            } catch (err) {
-                alert('Error: ' + err.message);
-            }
+            });
         });
     }
 
-    // Logout
+    // Log out
     if (logout) {
         logout.addEventListener('click', () => {
-            if (confirm("Are you sure you want to log out?")) {
-                window.location.href = '/logout';
-            }
+            showStatus("Log Out", "Are you sure you want to log out?", {
+                showButton: true,
+                buttonText: "Log Out",
+                cancelButtonText: "Cancel",
+                callback: () => {
+                    window.location.href = '/logout';
+                }
+            });
         });
     }
+
     const allowedBarangays = [
         "Atisan","Bautista","Concepcion","Del Remedio","Dolores",
         "I-A","I-B","II-A","II-A (Bagong Bayan)","II-B","II-C","II-D","II-E","II-F",
@@ -207,54 +286,67 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Upload data
     document.getElementById("save-btn").addEventListener("click", async () => {
-        loadingModal.style.display = 'flex';
-        spinner.style.display = "block";
-        spinnerText.textContent = "Fetching data";
-
         const barangay = document.getElementById("barangay").value;
         const year = document.getElementById("year").value;
         const week = document.getElementById("week").value;
         const population = document.getElementById("population").value;
         const fileInput = document.getElementById("csvFile");
 
-        // Basic validations
-        if (!barangay || !year || !week) return showError("Please fill out all details before uploading.");
-        if (!fileInput.files.length) return showError("Please select a CSV file.");
-        if (!population || isNaN(population) || parseInt(population) <= 0) return showError("Population must be a valid positive integer.");
-
-        const text = await fileInput.files[0].text();
-
-        // Send data to backend
-        try {
-            spinnerText.textContent = "Processing data...";
-            const res = await fetch("/api/upload", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ barangay, year, week, population, csv: text })
-            });
-            const result = await res.json();
-            spinner.style.display = "none";
-            spinnerText.textContent = result.message;
-        } catch (err) {
-            spinnerText.textContent = "Upload failed";
-            console.error(err);
-        } finally {
-            setTimeout(() => {
-                loadingModal.style.display = "none";
-                uploadModal.style.display = "none";
-                spinnerText.textContent = "";
-            }, 3000);
+        if (!barangay || !year || !week) {
+            return showStatus("Upload Data Failed", "Please fill out all details before uploading.", { showButton: true });
+        }
+        if (!fileInput.files.length) {
+            return showStatus("Upload Data Failed", "Please select a CSV file before proceeding.", { showButton: true });
+        }
+        if (!population || isNaN(population) || parseInt(population) <= 0) {
+            return showStatus("Upload Data Failed", "Population must be a valid positive integer.", { showButton: true });
         }
 
-        function showError(msg) {
-            spinner.style.display = "none";
-            spinnerText.textContent = msg;
-            setTimeout(() => {
-                loadingModal.style.display = "none";
-                uploadModal.style.display = "none";
-                spinnerText.textContent = "";
-            }, 3000);
-        }
+        
+        showStatus("Upload Data", "Are you sure you want to upload this file?", {
+            showButton: true,
+            buttonText: "Proceed",
+            cancelButtonText: "Cancel",
+            callback: async () => {
+                const text = await fileInput.files[0].text();
+
+                loadingModal.style.display = 'flex';
+                spinner.style.display = "block";
+                spinnerText.textContent = "Uploading data";
+
+                try {
+                    const res = await fetch("/api/upload", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ barangay, year, week, population, csv: text })
+                    });
+                    const result = await res.json();
+
+                    if (!res.ok || (result && result.success === false)) {
+                        throw new Error(result.message || "Upload failed.");
+                    }
+
+                    showStatus(result.title || "Upload Failed", result.message, {
+                        showButton: true,
+                        buttonText: "Okay",
+                        callback: () => {
+                            uploadModal.style.display = "none";
+                        }
+                    });
+                } catch (err) {
+                    console.error(err);
+                    showStatus("Upload Failed", err.message || "An unexpected error occurred during upload.", {
+                        showButton: true
+                    });
+                } finally {
+                    spinner.style.display = "none";
+                    spinnerText.textContent = "";
+                    setTimeout(() => {
+                        loadingModal.style.display = "none";
+                    }, 300);
+                }
+            }
+        });
     });
 
     let lastFetchedData = [];
@@ -279,11 +371,12 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!Array.from(checkboxes).some(cb => cb.checked)) {
                 spinner.style.display = "none";
                 spinnerText.textContent =`Please select at least one option in ${id.replace("filter", "")} before searching.`;
+                showStatus("Search Data", `Please select at least one option in ${id.replace("filter", "")} before searching.`, {
+                    showButton: true
+                });
                 setTimeout(() => {
                     loadingModal.style.display = "none";
-                    uploadModal.style.display = "none";
-                    spinnerText.textContent = ""; 
-                }, 3000);
+                }, 300);
                 return;
             }
         }
@@ -313,6 +406,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             const result = await response.json();
+
             if (response.ok) {
                 lastFetchedData = result.data || [];
                 tbody.innerHTML = "";
@@ -339,18 +433,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error(result.error || "Unknown error");
             }
         } catch (err) {
-            alert("Error fetching data: " + err.message);
             console.error(err);
+            showStatus("Search Data", `Error fetching data: ${err.message}`, {
+                showButton: true
+            });
         } finally {
             loadingModal.style.display = "none";
             spinnerText.textContent = "";
+            spinner.style.display = "none";
         }
     });
 
     // Download data
     document.getElementById("downloadCsvBtn").addEventListener("click", () => {
         if (!lastFetchedData.length) {
-            alert("No data available to download. Please search first.");
+            showStatus("Download CSV", "No data available to download. Please search first.", {
+                showButton: true
+            });
             return;
         }
 
@@ -376,49 +475,50 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Delete data
     document.getElementById("deleteDataBtn").addEventListener("click", async () => {
-        if (!confirm("Are you sure you want to delete these records? This cannot be undone.")) return;
+        showStatus("Delete Records", "Are you sure you want to delete these records? This cannot be undone.", {
+            showButton: true,
+            buttonText: "Delete",
+            cancelButtonText: "Cancel",
+            callback: async () => {
+                loadingModal.style.display = "flex";
+                spinnerText.textContent = "Deleting data";
+                spinner.style.display = "block";
 
-        loadingModal.style.display = "flex";
-        spinnerText.textContent = "Deleting data";
+                const barangays = Array.from(document.querySelectorAll(`#filterBarangay input:checked`)).map(cb => cb.value);
+                const years = Array.from(document.querySelectorAll(`#filterYear input:checked`)).map(cb => cb.value);
+                const weeks = Array.from(document.querySelectorAll(`#filterWeek input:checked`)).map(cb => cb.value);
 
-        const barangays = Array.from(document.querySelectorAll(`#filterBarangay input:checked`)).map(cb => cb.value);
-        const years = Array.from(document.querySelectorAll(`#filterYear input:checked`)).map(cb => cb.value);
-        const weeks = Array.from(document.querySelectorAll(`#filterWeek input:checked`)).map(cb => cb.value);
+                try {
+                    const response = await fetch('/api/deleteRecords', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ barangays, years, weeks })
+                    });
 
-        try {
-            const response = await fetch('/api/deleteRecords', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ barangays, years, weeks })
-            });
+                    const result = await response.json();
+                    if (!response.ok) throw new Error(result.error || "Unknown error");
 
-            const result = await response.json();
-            if (!response.ok) throw new Error(result.error || "Unknown error");
+                    showStatus("Delete Records", "Records deleted successfully.", { showButton: true });
 
-            spinnerText.textContent = "Records deleted successfully.";
-            spinner.style.display = "none";
-
-            setTimeout(() => {
-                loadingModal.style.display = "none";
-                spinnerText.textContent = "";
-            }, 3000);
-
-            document.getElementById("dataTableBody").innerHTML = "";
-            document.getElementById("deleteDataBtn").disabled = true;
-            document.getElementById("downloadCsvBtn").disabled = true;
-            lastFetchedData = [];
-        } catch (err) {
-            alert("Error deleting records: " + err.message);
-            console.error(err);
-            loadingModal.style.display = "none";
-        }
+                    document.getElementById("dataTableBody").innerHTML = "";
+                    document.getElementById("deleteDataBtn").disabled = true;
+                    document.getElementById("downloadCsvBtn").disabled = true;
+                    lastFetchedData = [];
+                } catch (err) {
+                    console.error(err);
+                    showStatus("Delete Records", "Error deleting records: " + err.message, { showButton: true });
+                } finally {
+                    loadingModal.style.display = "none";
+                    spinnerText.textContent = "";
+                    spinner.style.display = "none";
+                }
+            }
+        });
     });
 
     const downloadModal = document.getElementById("downloadModal");
     const openBtn = document.getElementById("open-download-modal");
     const barangayList = document.getElementById("barangay-wide-list");
-    const barangaySection = document.getElementById("barangay-select-section");
-    const modeRadios = document.getElementsByName("mode");
 
     // Open modal
     openBtn.onclick = async () => {
@@ -449,53 +549,35 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-
-    // Mode toggle
-    modeRadios.forEach((radio) => {
-        radio.addEventListener("change", (e) => {
-            if (e.target.value === "barangay") {
-                barangaySection.style.visibility = "visible";
-                barangaySection.style.pointerEvents = "auto";
-                barangaySection.style.height = "auto";
-            } else {
-                barangaySection.style.visibility = "hidden";
-                barangaySection.style.pointerEvents = "none";
-                barangaySection.style.height = "0";
-            }
-        });
-    });
-
     // Download table
     document.getElementById("download-table").addEventListener("click", async () => {
-        const mode = document.querySelector('input[name="mode"]:checked').value;
+        const selected = [...document.querySelectorAll(".barangay-checkbox:checked")].map(
+            (cb) => cb.value
+        );
 
-        if (mode === "citywide") {
-            const res = await fetch("/api/citywide");
-            const data = await res.json();
-
-            const csv = [
-                "date,total_cases",
-                ...Object.entries(data).map(([date, total]) => `"${date}",${total}`),
-            ].join("\n");
-
-            downloadCSV(csv, "citywide_forecast.csv");
-        } else {
-            const selected = [...document.querySelectorAll(".barangay-checkbox:checked")].map(
-                (cb) => cb.value
-            );
-            if (selected.length === 0) return alert("Select at least one barangay.");
-
+        if (selected.length === 0) {
+            showStatus("Download Failed", "Please select at least one barangay.", {
+                showButton: true,
+                buttonText: "Okay"
+            });
+            return;
+        }
+        
+        try {
             const res = await fetch(`/api/barangay?list=${selected.join(",")}`);
             const data = await res.json();
 
             const csv = [
-                "Barangay,date,forecasted_cases",
+                "Barangay,week_range,predicted_risk",
                 ...data.map(
-                    (row) => `${row.Barangay},"${row.date}",${row.forecasted_cases}`
-            ),
+                    (row) => `${row.Barangay},"${row.week_range}","${row.predicted_risk}"`
+                ),
             ].join("\n");
 
             downloadCSV(csv, "barangay_forecast.csv");
+            showStatus("Download Complete", "CSV file has been downloaded successfully.", { showButton: true });
+        } catch (err) {
+            showStatus("Download Failed", err.message, { showButton: true });
         }
     });
 
@@ -511,39 +593,39 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Download chart
     document.getElementById("download-chart").addEventListener("click", async () => {
-        const mode = document.querySelector('input[name="mode"]:checked').value;
+        const selected = [...document.querySelectorAll(".barangay-checkbox:checked")].map(
+            (cb) => cb.value
+        );
 
-        if (mode === "citywide") {
-            const res = await fetch("/api/citywide");
-            const data = await res.json();
-
-            await downloadChartImageFromData({
-                labels: Object.keys(data),
-                dataPoints: Object.values(data),
-                label: "Citywide Forecast",
-            }, "citywide_forecast.png");
-
-        } else {
-            const selected = [...document.querySelectorAll(".barangay-checkbox:checked")].map(
-                (cb) => cb.value
-            );
-            if (selected.length === 0) return alert("Select at least one barangay.");
-
+        if (selected.length === 0) {
+            showStatus("Download Failed", "Please select at least one barangay.", {
+                showButton: true,
+                buttonText: "Okay"
+            });
+            return;
+        }
+        try {
             const res = await fetch(`/api/barangay?list=${selected.join(",")}`);
             const data = await res.json();
 
+            const riskToScore = { "Low Risk": 1, "Moderate Risk": 2, "High Risk": 3 };
+
             for (const barangay of selected) {
                 const barangayData = data.filter((d) => d.Barangay === barangay);
-                const labels = barangayData.map((d) => d.date);
-                const cases = barangayData.map((d) => d.forecasted_cases);
+                const labels = barangayData.map((d) => d.week_range);
+                const scores = barangayData.map((d) => riskToScore[d.predicted_risk] || 0);
 
                 await downloadChartImageFromData({
                     labels,
-                    dataPoints: cases,
+                    dataPoints: scores,
                     label: `Forecast in ${barangay}`,
                 }, `${barangay}_forecast.png`);
             }
+            showStatus("Download Complete", "All chart images have been downloaded successfully.", { showButton: true });
+        } catch (err) {
+            showStatus("Download Failed", err.message, { showButton: true });
         }
+        
     });
 
     // Chart download helper
@@ -561,9 +643,37 @@ document.addEventListener('DOMContentLoaded', () => {
             type: "line",
             data: {
             labels,
-            datasets: [{ label, data: dataPoints, borderColor: "#1e3c72", fill: false }],
+            datasets: [{
+                label,
+                data: dataPoints,
+                borderColor: "#1e3c72",
+                fill: false,
+                pointBackgroundColor: dataPoints.map(score => {
+                    if (score === 1) return "#2ECC71";
+                    if (score === 2) return "#FFD700";
+                    if (score === 3) return "#FF6347";
+                    return "#808080";
+                })
+            }],
             },
-            options: { responsive: false, animation: false },
+            options: {
+                responsiveness: false,
+                animation: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        min: 0,
+                        max: 4,
+                        ticks: {
+                            stepSize: 1,
+                            callback: (value) => {
+                                const scoreToRisk = { 1: "Low", 2: "Moderate", 3: "High" };
+                                return scoreToRisk[value] || "";
+                            }
+                        }
+                    }
+                }
+            },
         });
 
         await new Promise((r) => setTimeout(r, 50));

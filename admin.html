@@ -82,7 +82,9 @@
                 <label for="newContent">Content:</label>
                 <textarea id="newContent" required></textarea>
 
-                <button type="submit">Add</button>
+                <div class="add-button">
+                    <button type="submit">Add Content</button>
+                </div>
             </form>
         </div>
     </div>
@@ -97,7 +99,9 @@
                 <label for="newLink">Link:</label>
                 <input type="url" id="newLink" required>
 
-                <button type="submit">Add</button>
+                <div class="add-button">
+                    <button type="submit">Add Reference</button>
+                </div>
             </form>
         </div>
     </div>
@@ -113,19 +117,31 @@
                 <input id="newAddress" required>
 
                 <label for="newPhone">Phone Number:</label>
-                <input type="tel" id="newPhone" required>
+                <input type="tel" id="newPhone">
 
                 <label for="newEmail">Email:</label>
-                <input type="email" id="newEmail" required>
+                <input type="email" id="newEmail">
 
                 <label for="newFacebook">Facebook Link:</label>
-                <input type="url" id="newFacebook" required>
+                <input type="url" id="newFacebook">
 
-                <button type="submit">Add</button>
+                <div class="add-button">
+                    <button type="submit">Add Contact</button>
+                </div>
             </form>
         </div>
     </div>
 
+    <div id="status-modal" class="modal">
+        <div class="modal-content" id="status-modal-content">
+            <h2 id="status-title"></h2>
+            <p id="status-content"></p>
+            <div class="status-buttons">
+                <button class="status-ok-btn" id="status-ok-btn">Confirm</button>
+                <button class="status-cancel-btn" id="status-cancel-btn">Cancel</button>
+            </div>
+        </div>
+    </div>
     <script src="js/admin.js"></script>
 </body>
 </html>

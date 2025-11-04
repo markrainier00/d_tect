@@ -61,7 +61,20 @@ header h1{
     margin-bottom: 5px;
     transition: all 0.3s ease-in;
 }
-.login-btn:hover {background-color: #345490;;}
+.status-ok-btn {
+    width: 50px;
+    padding: 8px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: small;
+    margin-top: 20px;
+    transition: all 0.3s ease-in;
+}
+.login-btn { background-color: #1e3c72; color: #ffffff; }
+.login-btn:hover { background-color: #172e59; }
+.update-btn, .status-ok-btn { background-color: #e0e7f2; color: #1e3c72; }
+.update-btn, .status-ok-btn:hover { background-color: #d3dce8; }
 a {
     display: inline;
     color: #1e3c72;
@@ -96,6 +109,7 @@ a:visited {
     align-items: center;
 }
 .modal-content {
+    min-width: 300px;
     background-color: #fff;
     margin: auto 10px auto 10px;
     padding: 30px 20px;
@@ -132,12 +146,9 @@ a:visited {
     cursor: pointer;
     font-size: 16px;
     font-weight: bold;
-    background-color: #2ecc71;
-    color: white;
     display: block;
     margin: 10px auto 0 auto;
 }
 
-.signup-submit-btn:hover {
-    background-color: #27ae60;
-}
+.signup-submit-btn, .reset-btn { background-color: #e1f2e0 ; color: #178244; transition: all 0.3s ease-in; }
+.signup-submit-btn:hover, .reset-btn:hover { background-color: #d3e8d3; }

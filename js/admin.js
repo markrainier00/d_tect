@@ -2,6 +2,9 @@ const preventionHeader = document.querySelector('#preventionheaderTable tbody');
 const preventionContent = document.querySelector('#preventionTable tbody');
 const contactsTable = document.querySelector('#contactsTable tbody');
 const referencesTable = document.querySelector('#referencesTable tbody');
+const statusModal = document.getElementById("status-modal");
+const statusTitle = document.getElementById('status-title');
+const statusContent = document.getElementById('status-content');
     
 async function verifyAuthToken() {
     try {
@@ -20,6 +23,69 @@ async function verifyAuthToken() {
     }
 }
 verifyAuthToken();
+
+function showStatus(title, message, options = {}) {
+    const {
+        duration = 3000,
+        showButton = false,
+        buttonText = "Okay",
+        callback = null,
+        cancelButtonText = null,
+        cancelCallback = null
+    } = options;
+
+    if (!statusModal || !statusTitle || !statusContent) return;
+
+    statusTitle.innerHTML = title;
+    statusContent.innerHTML = message;
+
+    const confirmBtn = document.getElementById("status-ok-btn");
+    const cancelBtn = document.getElementById("status-cancel-btn");
+
+    confirmBtn.style.display = "none";
+    cancelBtn.style.display = "none";
+
+    const newConfirm = confirmBtn.cloneNode(true);
+    const newCancel = cancelBtn.cloneNode(true);
+    confirmBtn.parentNode.replaceChild(newConfirm, confirmBtn);
+    cancelBtn.parentNode.replaceChild(newCancel, cancelBtn);
+
+    const okButton = document.getElementById("status-ok-btn");
+    const cancelButton = document.getElementById("status-cancel-btn");
+
+    if (showButton) {
+        okButton.textContent = buttonText;
+        okButton.style.display = "inline-block";
+        okButton.addEventListener("click", () => {
+            statusModal.style.display = "none";
+            statusTitle.innerHTML = "";
+            statusContent.innerHTML = "";
+            if (typeof callback === "function") callback();
+        });
+
+        if (cancelButtonText) {
+            cancelButton.textContent = cancelButtonText;
+            cancelButton.style.display = "inline-block";
+            cancelButton.addEventListener("click", () => {
+                statusModal.style.display = "none";
+                statusTitle.innerHTML = "";
+                statusContent.innerHTML = "";
+                if (typeof cancelCallback === "function") cancelCallback();
+            });
+        }
+    }
+
+    statusModal.style.display = "flex";
+
+    if (!showButton) {
+        setTimeout(() => {
+            statusModal.style.display = "none";
+            statusTitle.innerHTML = "";
+            statusContent.innerHTML = "";
+            if (typeof callback === "function") callback();
+        }, duration);
+    }
+}
 
 async function fetchContent() {
     try {
@@ -88,24 +154,21 @@ async function fetchContent() {
     }
 }
 
-// Fetch and render all rows
 function autoResizeTextarea(textarea) {
     textarea.style.height = 'auto';
     textarea.style.height = textarea.scrollHeight + 'px';
 }
-
 document.addEventListener('input', (e) => {
     if (e.target.tagName.toLowerCase() === 'textarea') {
         autoResizeTextarea(e.target);
     }
 });
-
 function resizeAllTextareas() {
     document.querySelectorAll('textarea').forEach(autoResizeTextarea);
 }
 
 function attachRowEventListeners() {
-    // Update button
+    // Update
     document.querySelectorAll('.update-btn').forEach(btn => {
         btn.addEventListener('click', async (e) => {
             const row = e.target.closest('tr');
@@ -147,38 +210,47 @@ function attachRowEventListeners() {
                 const result = await res.json();
                 if (!res.ok) throw new Error(result.error || "Update failed");
 
-                alert('Row updated successfully!');
-                fetchContent();
+                showStatus("Update Successful", "Content updated successfully!", { 
+                    showButton: true, 
+                    callback: fetchContent 
+                });
             } catch (err) {
-                alert('Update failed: ' + err.message);
+                showStatus("Update Failed", err.message, { showButton: true });
             }
         });
     });
 
-    // Delete button
+    // Delete
     document.querySelectorAll('.delete-btn').forEach(btn => {
         btn.addEventListener('click', async (e) => {
             const row = e.target.closest('tr');
             const table = row.dataset.table;
             const id = row.dataset.id;
 
-            if (!confirm("Are you sure you want to delete this item?")) return;
+            showStatus("Confirm Delete", "Are you sure you want to delete this item?", {
+                showButton: true,
+                buttonText: "Delete",
+                cancelButtonText: "Cancel",
+                callback: async () => {
+                    try {
+                        const res = await fetch('/api/deleteContent', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ table, id })
+                        });
 
-            try {
-                const res = await fetch('/api/deleteContent', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ table, id })
-                });
+                        const result = await res.json();
+                        if (!res.ok) throw new Error(result.error || "Delete failed");
 
-                const result = await res.json();
-                if (!res.ok) throw new Error(result.error || "Delete failed");
-
-                alert('Row deleted successfully!');
-                fetchContent();
-            } catch (err) {
-                alert('Delete failed: ' + err.message);
-            }
+                        showStatus("Delete Successful", "Content deleted successfully!", {
+                            showButton: true,
+                            callback: fetchContent
+                        });
+                    } catch (err) {
+                        showStatus("Delete Failed", err.message, { showButton: true });
+                    }
+                }
+            });
         });
     });
 }
@@ -199,14 +271,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const addReferenceBtn = document.getElementById('add-references');
     const addReference = document.getElementById('addReference');
     const addReferenceForm = document.getElementById('addReferenceForm');
-
-    // Table responsiveness
-    document.addEventListener('input', (e) => {
-        if (e.target.tagName.toLowerCase() === 'textarea') {
-            autoResizeTextarea(e.target);
-        }
-    });
-    window.addEventListener('resize', resizeAllTextareas);
 
     // Open Modals
     if (resetBtn && forgotPassword) {
@@ -251,41 +315,48 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             
             const email = forgotPassword.querySelector('#reset-email').value;
-            if (!email) {
-                alert('Please enter your email.');
-                return;
-            }
             
-            try {
-                const res = await fetch('/api/reset-password', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email })
-                });
+            showStatus("Reset Password", "You need to log out to reset your password. Proceed?", {
+                showButton: true,
+                buttonText: "Proceed",
+                cancelButtonText: "Cancel",
+                callback: async () => {
+                    try {
+                        const res = await fetch('/api/reset-password', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ email })
+                        });
 
-                const data = await res.json();
+                        const data = await res.json();
 
-                if (!res.ok) throw new Error(data.error || 'Failed to reset password');
+                        if (!res.ok) throw new Error(data.error || 'Failed to reset password');
 
-                if (confirm("You need to log out to reset your password.")) {
-                    alert(data.message);
-                    forgotPassword.style.display = 'none';
-                    forgotForm.reset();
-                    window.location.href = '/logout';
+                        showStatus("Reset Password", data.message, {
+                            showButton: false,
+                            callback: () => {
+                                forgotPassword.style.display = 'none';
+                                forgotForm.reset();
+                                window.location.href = '/logout';
+                            }
+                        });
+                    } catch (err) {
+                        showStatus("Error", err.message, { showButton: true });
+                    }
                 }
-
-            } catch (err) {
-                alert('Error: ' + err.message);
-            }
+            });
         });
     }
 
     // Logout
     if (logout) {
         logout.addEventListener('click', () => {
-            if (confirm("Are you sure you want to log out?")) {
-                window.location.href = '/logout';
-            }
+            showStatus("Log Out", "Are you sure you want to log out?", {
+                showButton: true,
+                buttonText: "Log Out",
+                cancelButtonText: "Cancel",
+                callback: () => window.location.href = "/logout"
+            });
         });
     }
 
@@ -295,11 +366,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const title = document.getElementById('newTitle').value.trim();
         const content = document.getElementById('newContent').value.trim();
-
-        if (!title || !content) {
-            alert("Both fields are required!");
-            return;
-        }
 
         try {
             const res = await fetch('/api/addPrevention', {
@@ -311,12 +377,16 @@ document.addEventListener('DOMContentLoaded', () => {
             const result = await res.json();
             if (!res.ok) throw new Error(result.error || "Insert failed");
 
-            alert("New prevention content added successfully!");
-            fetchContent();  // Refresh the table
-            addPrevention.style.display = 'none';
-            addPreventionForm.reset();
+            showStatus("Prevention Content Added", "New prevention content added successfully!", {
+                showButton: true,
+                callback: () => {
+                    fetchContent();
+                    addPrevention.style.display = 'none';
+                    addPreventionForm.reset();
+                }
+            });
         } catch (err) {
-            alert("Insert failed: " + err.message);
+            showStatus("Insert Failed", err.message, { showButton: true });
         }
     });
 
@@ -326,11 +396,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const title = document.getElementById('newrefTitle').value.trim();
         const href = document.getElementById('newLink').value.trim();
-
-        if (!title || !href) {
-            alert("Both fields are required!");
-            return;
-        }
 
         try {
             const res = await fetch('/api/addReference', {
@@ -342,12 +407,16 @@ document.addEventListener('DOMContentLoaded', () => {
             const result = await res.json();
             if (!res.ok) throw new Error(result.error || "Insert failed");
 
-            alert("New reference added successfully!");
-            fetchContent();  // refresh table data
-            addReference.style.display = 'none';
-            addReferenceForm.reset();
+            showStatus("Reference Added", "New reference added successfully!", {
+                showButton: true,
+                callback: () => {
+                    fetchContent();
+                    addReference.style.display = 'none';
+                    addReferenceForm.reset();
+                }
+            });
         } catch (err) {
-            alert("Insert failed: " + err.message);
+            showStatus("Insert Failed", err.message, { showButton: true });
         }
     });
 
@@ -361,11 +430,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const email = document.getElementById('newEmail').value.trim();
         const facebook_url = document.getElementById('newFacebook').value.trim();
 
-        if (!office_name || !address) {
-            alert("Office name and address are required!");
-            return;
-        }
-
         try {
             const res = await fetch('/api/addContact', {
                 method: 'POST',
@@ -376,12 +440,16 @@ document.addEventListener('DOMContentLoaded', () => {
             const result = await res.json();
             if (!res.ok) throw new Error(result.error || "Insert failed");
 
-            alert("New contact added successfully!");
-            fetchContent();  // refresh data
-            addContact.style.display = 'none';
-            addContactForm.reset();
+            showStatus("Contact Added", "New contact added successfully!", {
+                showButton: true,
+                callback: () => {
+                    fetchContent();
+                    addContact.style.display = 'none';
+                    addContactForm.reset();
+                }
+            });
         } catch (err) {
-            alert("Insert failed: " + err.message);
+            showStatus("Insert Failed", err.message, { showButton: true });
         }
     });
 });

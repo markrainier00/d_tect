@@ -98,8 +98,9 @@ header h5 {
     text-align: left;
     cursor: pointer;
     border-radius: 5px;
+    transition: all 0.3s ease-in;
 }
-.dropdown-content button i {margin-right: 8px;}
+.dropdown-content button i { margin-right: 8px; }
 .dropdown-content button:hover {background-color: #ddd;}
 .dropdown:hover .dropdown-content {
     display: flex;
@@ -117,34 +118,21 @@ header h5 {
     margin-top: 8px;
     margin-bottom: 16px;
 }
-.reset-btn, #addPrevention button, #addReference button, #addContact button {
-    padding: 8px 24px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 16px;
-    font-weight: bold;
-    background-color: #2ecc71;
-    color: white;
-    display: block;
-    margin: 10px auto 0 auto;
-}
-
 .add-btn, .update-btn, .delete-btn {
-    color: white;
     font-weight: 500;
     border: none;
     border-radius: 5px;
     padding: 5px 15px;
     margin-left: 3px;
     cursor: pointer;
+    transition: all 0.3s ease-in;
 }
-.add-btn {background-color: #577cbd; width: 150px; align-self: flex-end;}
-.add-btn:hover { background-color: #4869a2; }
-.delete-btn{background-color: #d9534f;}
-.delete-btn:hover { background-color: #c64c48; }
-.update-btn{background-color: #1e3c72;}
-.update-btn:hover { background-color: #172e59; }
+.add-btn { background-color: #e0ebff; color: #4c6ea7; width: 150px; align-self: flex-end; }
+.add-btn:hover { background-color: #ced8eb; }
+.delete-btn, .status-cancel-btn {background-color: #f2e0e0; color: #d9534f;}
+.delete-btn:hover, .status-cancel-btn:hover { background-color: #e8d3d3; }
+.update-btn, .status-ok-btn { background-color: #e0e7f2; color: #1e3c72; }
+.update-btn:hover, .status-ok-btn:hover { background-color: #d3dce8; }
 
 .content {
     display: flex;
@@ -207,6 +195,7 @@ header h5 {
     justify-content: center;
 }
 .modal-content {
+    min-width: 300px;
     background-color: #fff;
     margin: 15% auto;
     padding: 20px;
@@ -221,6 +210,8 @@ header h5 {
     text-align: center;
     color: #2c3e50;
 }
+#forgot-form, #status-modal-content, .add-button { text-align: center; }
+.modal-content h2 { color: #1e3c72; }
 #addPrevention textarea, #addReference input, #addContact input {
   width: 100%;
   min-height: 40px;
@@ -235,3 +226,21 @@ header h5 {
   overflow: hidden;
   white-space: pre-wrap;
 }
+
+.status-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+}
+.status-ok-btn, .status-cancel-btn, .reset-btn,
+#addPrevention button, #addReference button, #addContact button {
+    padding: 8px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: small;
+    margin-top: 20px;
+    transition: all 0.3s ease-in;
+}
+.reset-btn, #addPrevention button, #addReference button, #addContact button { background-color: #e1f2e0 ; color: #178244; transition: all 0.3s ease-in; }
+.reset-btn:hover, #addPrevention button:hover, #addReference button:hover, #addContact button:hover { background-color: #d3e8d3; }

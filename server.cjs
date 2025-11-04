@@ -35,6 +35,24 @@ app.post("/dtect/signup", async (req, res) => {
   const { email, password, role, first_name, last_name } = req.body;
 
   try {
+    const { data: existingUser, error: fetchError } = await supabaseClient
+      .from('profiles')
+      .select('id')
+      .eq('email', email)
+      .single();
+
+    if (fetchError && fetchError.code !== 'PGRST116') {
+      console.error("Error checking existing profile:", fetchError);
+      return res.status(500).json({ success: false, message: "Server error checking email." });
+    }
+
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: "This email is already in use. Try logging in or resetting your password."
+      });
+    }
+
     const { data, error: signupError } = await supabaseClient.auth.signUp({
       email,
       password,
@@ -56,9 +74,25 @@ app.post("/dtect/signup", async (req, res) => {
 
     const user = data.user;
     if (!user || !user.id) {
-      return res.status(500).json({ success: false, message: "User ID not found after signup" });
+      return res.status(500).json({ success: false, message: "User ID not found after sign up." });
     }
-    res.status(200).json({ success: true, message: "Signup successful! Please check your email to confirm." });
+
+    const { error: insertError } = await supabaseClient
+      .from('profiles')
+      .insert({
+        id: user.id,
+        email,
+        first_name,
+        last_name,
+        role: role || 'user',
+        is_enabled: false
+      });
+
+    if (insertError) {
+      console.error('Error inserting profile:', insertError);
+      return res.status(500).json({ success: false, message: "Failed to create profile." });
+    }
+    res.status(200).json({ success: true, message: "Sign up successful! Please check your email to confirm." });
   } catch (err) {
     console.error('Server error during signup:', err);
     res.status(500).json({ success: false, message: 'Internal server error' });
@@ -104,17 +138,15 @@ app.post("/dtect/login", async (req, res) => {
     if (data.user && !data.user.email_confirmed_at) {
       return res.status(401).json({
         success: false,
-        requiresConfirmation: true,
-        message: "Please confirm your email address before logging in. Check your inbox for a confirmation email.",
+        message: "Please confirm your email address before logging in. Check your inbox for a confirmation email."
       });
     }
 
-    // Check if user has admin role
     const userRole = data.user?.user_metadata?.role;
-    if (userRole && userRole !== "admin" && userRole !== "healthcare" && userRole !== "superadmin") {
+    if (userRole && userRole !== "System Administrator" && userRole !== "Healthcare Staff" && userRole !== "Account Administrator") {
       return res.status(403).json({
         success: false,
-        message: "Access denied. Admin privileges required.",
+        message: "You don't have access to this system."
       });
     }
 
@@ -126,7 +158,10 @@ app.post("/dtect/login", async (req, res) => {
       .single();
 
     if (profilesError || !profiles?.is_enabled) {
-      return res.status(403).json({ success: false, message: "Account not approved by admin yet." });
+      return res.status(403).json({
+        success: false,
+        message: "Account not approved by an Account Administrator yet."
+      });
     }
 
     // Set the cookie
@@ -184,31 +219,15 @@ app.get("/private", async (req, res) => {
     return res.redirect("/");
   }
   const role = user.user_metadata?.role;
-  if (role === "healthcare") {
+  if (role === "Healthcare Staff") {
     res.sendFile(path.join(__dirname, "staff.html"));
   } else if (role === "System Administrator") {
       res.sendFile(path.join(__dirname, "admin.html"));
-  } else if (role === "superadmin") {
+  } else if (role === "Account Administrator") {
       res.sendFile(path.join(__dirname, "superadmin.html"));
   } else {
     return res.status(403).send("Access denied.");
   }
-});
-
-app.post("/dtect/verify-superadmin", async (req, res) => {
-  const token = req.cookies.access_token;
-  if (!token) return res.status(401).json({ success: false, message: "Missing token" });
-
-  const { data: { user }, error } = await supabaseClient.auth.getUser(token);
-  if (error || !user) {
-    return res.status(401).json({ success: false, message: "Invalid token" });
-  }
-
-  if (user.user_metadata.role !== "superadmin") {
-    return res.status(403).json({ success: false, message: "Not a superadmin" });
-  }
-
-  return res.json({ success: true, user: { id: user.id, email: user.email } });
 });
 
 app.get("/logout", (req, res) => {
@@ -219,10 +238,6 @@ app.get("/logout", (req, res) => {
 // =========RESET PASSWORD=========
 app.post('/api/reset-password', async (req, res) => {
   const { email } = req.body;
-
-  if (!email) {
-    return res.status(400).json({ error: 'Email is required.' });
-  }
 
   try {
     const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
@@ -249,7 +264,7 @@ app.post("/dtect/verify-auth", async (req, res) => {
     return res.status(401).json({ success: false, message: "Invalid token" });
   }
 
-  if (user.user_metadata.role !== "admin" && user.user_metadata.role !== "healthcare") {
+  if (user.user_metadata.role !== "System Administrator" && user.user_metadata.role !== "Healthcare Staff" && user.user_metadata.role !== "Account Administrator") {
     return res.status(403).json({ success: false, message: "Access denied." });
   }
 
@@ -448,7 +463,7 @@ app.post("/api/upload", async (req, res) => {
 
     await fetch('https://www.dtectsystem.online/forecast');
 
-    res.json({ message: "Uploaded successfully" });
+    res.json({ title: `Upload Success`, message: "Records uploaded successfully." });
   } catch (err) {
     console.error(err);
 
@@ -597,14 +612,14 @@ app.get("/api/citywide", async (req, res) => {
   try {
     const { data, error } = await supabaseClient
       .from("forecast_results")
-      .select("date, forecasted_cases");
+      .select("week_range, predicted_risk");
 
     if (error) throw error;
 
     const grouped = {};
     data.forEach((r) => {
-      if (!grouped[r.date]) grouped[r.date] = 0;
-      grouped[r.date] += r.forecasted_cases;
+      if (!grouped[r.week_range]) grouped[r.week_range] = 0;
+      grouped[r.week_range] += r.predicted_risk;
     });
 
     res.json(grouped);
@@ -622,7 +637,7 @@ app.get("/api/barangay", async (req, res) => {
   try {
     const { data, error } = await supabaseClient
       .from("forecast_results")
-      .select("Barangay, date, forecasted_cases")
+      .select("Barangay, week_range, predicted_risk")
       .in("Barangay", barangays);
 
     if (error) throw error;
@@ -793,18 +808,6 @@ function formatToPHTime(utcString) {
   };
   return new Date(utcString).toLocaleString('en-PH', options);
 }
-function formatRole(role) {
-  switch (role) {
-    case 'superadmin':
-      return 'Accounts Administrator';
-    case 'healthcare':
-      return 'Healthcare Staff';
-    case 'admin':
-      return 'System Administrator';
-    default:
-      return role;
-  }
-}
 app.get('/api/logs', async (req, res) => {
   try {
     const { data, error } = await supabaseClient
@@ -816,7 +819,7 @@ app.get('/api/logs', async (req, res) => {
 
     const formattedLogs = data.map(user => ({
       ...user,
-      role: formatRole(user.role),
+      role: user.role,
       logged_in_at: formatToPHTime(user.logged_in_at)
     }));
 
@@ -832,8 +835,7 @@ app.get('/api/users', async (req, res) => {
   try {
     const { data, error } = await supabaseClient
       .from('profiles')
-      .select('id, email, first_name, last_name, role, is_enabled')
-      .neq('role', 'superadmin');
+      .select('id, email, first_name, last_name, role, is_enabled');
 
     if (error) throw error;
 
@@ -847,22 +849,83 @@ app.patch('/api/users/:id/toggle', async (req, res) => {
   const { is_enabled } = req.body;
 
   try {
-    const { data, error } = await supabaseClient
+    const { data: user, error: fetchUserError } = await supabaseClient
+      .from('profiles')
+      .select('role, is_enabled')
+      .eq('id', userId)
+      .single();
+
+    if (fetchUserError) throw fetchUserError;
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    
+    if (user.role === 'Account Administrator' && is_enabled === false) {
+      const { data: enabledAdmins, error: fetchAdminsError } = await supabaseClient
+        .from('profiles')
+        .select('id')
+        .eq('role', 'Account Administrator')
+        .eq('is_enabled', true);
+
+      if (fetchAdminsError) throw fetchAdminsError;
+
+      if (enabledAdmins.length <= 3) {
+        return res.status(400).json({
+          success: false,
+          message: 'Cannot disable this user. At least two Account Administrators must remain enabled.'
+        });
+      }
+    }
+    const { data, error: updateError } = await supabaseClient
       .from('profiles')
       .update({ is_enabled })
-      .eq('id', userId);
+      .eq('id', userId)
+      .select();
 
-    if (error) throw error;
+    if (updateError) throw updateError;
 
-    res.json(data);
+    const message = is_enabled
+      ? 'User has been enabled.'
+      : 'User has been disabled.';
+
+    res.json({ success: true, message, data });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: err.message || 'Server error' });
   }
 });
 app.delete('/api/users/:id', async (req, res) => {
   const userId = req.params.id;
 
   try {
+    const { data: userToDelete, error: fetchUserError } = await supabaseClient
+      .from('profiles')
+      .select('role')
+      .eq('id', userId)
+      .single();
+
+    if (fetchUserError) {
+      console.error('Error fetching user:', fetchUserError);
+      return res.status(500).json({ success: false, message: 'Error fetching user.' });
+    }
+
+    if (userToDelete.role === 'Account Administrator') {
+      const { data: admins, error: fetchAdminsError } = await supabaseClient
+        .from('profiles')
+        .select('id')
+        .eq('role', 'Account Administrator');
+
+      if (fetchAdminsError) {
+        console.error('Error fetching Account Administrators:', fetchAdminsError);
+        return res.status(500).json({ success: false, message: 'Error checking administrators.' });
+      }
+
+      if (admins.length <= 3) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Cannot delete this user. At least two Account Administrators must remain.' 
+        });
+      }
+    }
+
     const { error: profileError } = await supabaseClient
       .from('profiles')
       .delete()
@@ -875,18 +938,16 @@ app.delete('/api/users/:id', async (req, res) => {
     const { error: authError } = await supabaseClient.auth.admin.deleteUser(userId);
     if (authError) {
       console.error('Auth deletion error:', authError);
-      throw authError; // stop if auth deletion fails
+      throw authError;
     }
 
-    res.json({ success: true, message: 'User deleted from profiles and auth.' });
+    res.json({ success: true, message: 'User deleted.' });
 
   } catch (err) {
     console.error('Unexpected error:', err);
     res.status(500).json({ error: err.message || JSON.stringify(err) });
   }
 });
-
-
 
 
 app.listen(PORT, async () => {

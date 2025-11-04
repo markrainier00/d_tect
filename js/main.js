@@ -550,9 +550,8 @@ async function getForecastDataAndDisplay() {
     try {
         const { data, error } = await supabaseClient
             .from("forecast_results")
-            .select("Barangay, date, forecasted_cases, risk_level")
-            .order("date", { ascending: true })
-            .order("forecasted_cases", { ascending: false })
+            .select("Barangay, week_range, predicted_risk")
+            .order("week_range", { ascending: true })
             .order("Barangay", { ascending: true });
 
         if (error) throw error;
@@ -562,13 +561,13 @@ async function getForecastDataAndDisplay() {
         }
 
         const forecastData = data;
-        const uniqueDates = [...new Set(forecastData.map(item => item.date))];
+        const uniqueDates = [...new Set(forecastData.map(item => item.week_range))];
         const weekSelect = document.getElementById("forecast-week-select");
         let forecastMap, barangayLayer, chart;
 
         // Populate week dropdown
         weekSelect.innerHTML = uniqueDates
-            .map((d, i) => `<option value="${i + 1}">Week ${i + 1} (${d})</option>`)
+            .map((d, i) => `<option value="${i + 1}">${d}</option>`)
             .join("");
 
         forecastMap = L.map("forecast-map").setView([14.05, 121.33], 11);
@@ -615,50 +614,26 @@ async function getForecastDataAndDisplay() {
                     }
                 },
                 scales: {
+                    x: {
+                        ticks: {
+                            display: false
+                        }
+                    },
                     y: {
-                        beginAtZero: true
+                        beginAtZero: true,
+                        min: 0,
+                        max: 4,
+                        ticks: {
+                            stepSize: 1,
+                            callback: value => {
+                                const scoreToRisk = { 1: "Low", 2: "Moderate", 3: "High" };
+                                return scoreToRisk[value] || "";
+                            }
+                        }
                     }
                 }
             }
         });
-
-        async function updateForecastMap(weekNumber) {
-            const geoResponse = await fetch("assets/SAN_PABLO_MAP.geojson");
-            const geojsonData = await geoResponse.json();
-
-            const selectedDate = uniqueDates[weekNumber - 1];
-            const weekData = forecastData.filter(item => item.date === selectedDate);
-
-            geojsonData.features.forEach(feature => {
-                const barangayName = feature.properties.name;
-                const barangayData = weekData.find(
-                    rec => rec.Barangay.toLowerCase().trim() === barangayName.toLowerCase().trim()
-                );
-                feature.properties.risk_level = barangayData ? barangayData.risk_level : "No Data";
-            });
-
-            if (barangayLayer) forecastMap.removeLayer(barangayLayer);
-
-            barangayLayer = L.geoJSON(geojsonData, {
-                style: feature => ({
-                    color: "#1e3c72",
-                    weight: 0.5,
-                    opacity: 1,
-                    fillColor: getColorForRiskClassification(feature.properties.risk_level),
-                    fillOpacity: 1
-                }),
-                onEachFeature: (feature, layer) => {
-                    const name = feature.properties.name;
-                    const risk = feature.properties.risk_level;
-                    layer.bindPopup(`<b>${name}</b><br>Risk: ${risk}`);
-                    layer.on({
-                        mouseover: e => e.target.setStyle({ weight: 3 }),
-                        mouseout: e => e.target.setStyle({ weight: 0.5 }),
-                        click: () => updateChart(name)
-                    });
-                }
-            }).addTo(forecastMap);
-        }
 
         function getColorForRiskClassification(risk) {
             if (!risk) return "#808080";
@@ -670,33 +645,66 @@ async function getForecastDataAndDisplay() {
             }
         }
 
+        const geoResponse = await fetch("assets/SAN_PABLO_MAP.geojson");
+        const geojsonData = await geoResponse.json();
+
+        async function updateForecastMap(weekNumber) {
+            const selectedDate = uniqueDates[weekNumber - 1];
+            const weekData = forecastData.filter(item => item.week_range === selectedDate);
+
+            geojsonData.features.forEach(feature => {
+                const barangayName = feature.properties.name;
+                const barangayData = weekData.find(
+                    rec => rec.Barangay.toLowerCase().trim() === barangayName.toLowerCase().trim()
+                );
+                feature.properties.predicted_risk = barangayData ? barangayData.predicted_risk : "No Forecast";
+            });
+
+            if (barangayLayer) forecastMap.removeLayer(barangayLayer);
+
+            barangayLayer = L.geoJSON(geojsonData, {
+                style: feature => ({
+                    color: "#1e3c72",
+                    weight: 0.5,
+                    opacity: 1,
+                    fillColor: getColorForRiskClassification(feature.properties.predicted_risk),
+                    fillOpacity: 1
+                }),
+                onEachFeature: (feature, layer) => {
+                    const name = feature.properties.name;
+                    const risk = feature.properties.predicted_risk;
+                    layer.bindPopup(`<b>${name}</b><br>Risk: ${risk}`);
+                    layer.on({
+                        mouseover: e => e.target.setStyle({ weight: 3 }),
+                        mouseout: e => e.target.setStyle({ weight: 0.5 }),
+                        click: () => updateChart(name)
+                    });
+                }
+            }).addTo(forecastMap);
+        }
+
         // Table
         function updateForecastTable(weekNumber) {
             const selectedDate = uniqueDates[weekNumber - 1];
-            const weekData = forecastData.filter(item => item.date === selectedDate);
+            const weekData = forecastData.filter(item => item.week_range === selectedDate);
             
             const riskOrder = { "High Risk": 1, "Moderate Risk": 2, "Low Risk": 3 };
-            const sortedWeekData = weekData.sort( (a, b) => riskOrder[a.risk_level] - riskOrder[b.risk_level] );
+            const sortedWeekData = weekData.sort( (a, b) => riskOrder[a.predicted_risk] - riskOrder[b.predicted_risk] );
              
             const tableBody = document.getElementById("forecast-list");
 
             tableBody.innerHTML = `
             <table style="width: 100%; border-collapse: collapse; text-align: left;">
                 </tbody>
-                ${sortedWeekData.map(d => {
-                    let color = '';
-                    if (d.risk_level === 'Low Risk') color = '#2ECC71';
-                    else if (d.risk_level === 'Moderate Risk') color = '#FFD700';
-                    else if (d.risk_level === 'High Risk') color = '#FF6347';
-
-                    return `
-                    <tr>
-                        <td style="padding: 8px; border-bottom: 1px solid #ddd;">${d.Barangay}</td>
-                        <td style="padding: 8px; border-bottom: 1px solid #ddd;">${Math.round(Math.max(0, d.forecasted_cases))}</td>
-                        <td style="padding: 8px; border-bottom: 1px solid #ddd; font-weight: bold; color: ${color};">${d.risk_level}</td>
-                    </tr>
-                `;
-                }).join("")}
+                    ${sortedWeekData.map(d => {
+                        const color = getColorForRiskClassification(d.predicted_risk);
+                        return `
+                        <tr>
+                            <td style="padding: 8px; border-bottom: 1px solid #ddd;">${d.Barangay}</td>
+                            <td style="padding: 8px; border-bottom: 1px solid #ddd; font-weight: bold; color: ${color};">${d.predicted_risk}</td>
+                        </tr>
+                    `;
+                    }).join("")}
                 </tbody>
             </table>
             `;
@@ -705,16 +713,20 @@ async function getForecastDataAndDisplay() {
         // Chart
         function updateChart(barangayName) {
             const barangayData = forecastData.filter(item => item.Barangay === barangayName);
-            const labels = barangayData.map(d => d.date);
-            const cases = barangayData.map(d => Math.round(Math.max(0, d.forecasted_cases)));
-            document.getElementById("forecast-barangay").textContent = "10-Week Forecast in " + barangayName;
+            const labels = barangayData.map(d => d.week_range);
+            
+            const riskToScore = { "Low Risk": 1, "Moderate Risk": 2, "High Risk": 3 };
+            const riskScores = barangayData.map(d => riskToScore[d.predicted_risk] || 0);
+
+            document.getElementById("forecast-barangay").textContent = "10-Week Risk Forecast in " + barangayName;
 
             chart.data.labels = labels;
             chart.data.datasets = [{
-                label: `Case Forecast`,
-                data: cases,
+                label: `Forecasted Risk Level`,
+                data: riskScores,
                 borderColor: "#1e3c72",
-                fill: false
+                fill: false,
+                pointBackgroundColor: barangayData.map(d => getColorForRiskClassification(d.predicted_risk))
             }];
             chart.update();
         }
