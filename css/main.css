@@ -296,7 +296,7 @@ header h5 {
 }
 
 /* Prevention */
-.message {
+.message, .yearly-header {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -521,7 +521,7 @@ header h5 {
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 1007;
+    z-index: 1008;
 }
 .spinner {
     border: 4px solid rgba(255, 255, 255, 0.3);
