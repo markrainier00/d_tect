@@ -427,25 +427,9 @@ header h5 {
 }
 
 /* Responsiveness */
-@media (max-width: 900px) {
-    #contact, .contact-details {
-        padding: 16px 4vw;
-    }
-    .contact-details-row {
-        flex-direction: column;
-        gap: 18px;
-    }
-    .contact-block {
-        max-width: 100%;
-    }
-}
 @media (max-width: 768px) {
     .hospital-table th, .hospital-table td {
         padding: 8px 4px;
-    }
-    .contact-details {
-        padding: 10px 2vw;
-        gap: 18px;
     }
     .modal-content {
         padding: 18px 8px 16px 8px;
