@@ -462,6 +462,9 @@ header h5 {
     .forecast-card {
         min-width: 200px;
     }
+    .dashboard-card {
+        padding: 10px;
+    }
     
 }
 
