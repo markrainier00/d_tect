@@ -324,7 +324,6 @@ header h5 {
     margin-bottom: 22px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.3);
     text-align: center;
-
 }
 #prevention_content_container {
     display: inline-block;
@@ -378,7 +377,6 @@ header h5 {
     justify-content: flex-start;
     width: max-content;
     font-size: small;
-    font-size: small;
     padding-bottom: 10px;
     box-sizing: border-box;
 }
@@ -405,8 +403,8 @@ header h5 {
     margin: 0 auto 18px auto;
     background: #fff;
     border-radius: 10px;
+    font-size: small;
     box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-    font-size: 1em;
     overflow: hidden;
 }
 .hospital-table th, .hospital-table td {
@@ -449,7 +447,19 @@ header h5 {
     .dashboard-card {
         padding: 10px;
     }
-    
+    .hospitals {
+        height: 300px;
+        overflow: auto;
+        margin-bottom: 10px;
+    }
+    .prevention-content {
+        height: 500px;
+        overflow: auto;
+    }
+    .sources-section {
+        height: 200px;
+        overflow: auto;
+    }
 }
 
  /* Modal */
