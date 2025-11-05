@@ -956,7 +956,7 @@ app.get("/api/hospitals", async (req, res) => {
   if (!lat || !lon) {
     return res.status(400).json({ error: "Missing lat/lon" });
   }
-  
+
   const lonNum = parseFloat(lon);
   const latNum = parseFloat(lat);
 
@@ -974,7 +974,7 @@ app.get("/api/hospitals", async (req, res) => {
   try {
     const response = await fetch(url, {
       headers: {
-        "User-Agent": "YourAppName/1.0 (your@email.com)", // required by Nominatim
+        "User-Agent": "D-TECT/1.0 (ilaganmarkrainiercorpuz@gmail.com)",
       },
     });
 
