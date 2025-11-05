@@ -74,11 +74,6 @@ html {scroll-behavior: smooth;}
   margin-left: 200px;
   width: calc(100%);
 }
-@media screen {
-    .sidebar {
-        z-index: 1001;
-    }
-}
 header {
     position: fixed;
     display: flex;
@@ -460,6 +455,28 @@ header h5 {
         height: 200px;
         overflow: auto;
     }
+    .sidebar {
+        z-index: 1006;
+    }
+    .sidebar.active {
+        transform: translateX(0);
+    }
+    .sidebar.active ~ .main-content {
+        margin-left: 0 !important;
+        width: 100% !important;
+    }
+    .sidebar.active ~ .overlay {
+        display: block;
+    }
+    header {
+        z-index: 1007;
+    }
+    .overlay {
+        z-index: 1004;
+    }
+    .modal {
+        z-index: 1005;
+    }
 }
 
  /* Modal */
@@ -483,6 +500,8 @@ header h5 {
     border: 1px solid #888;
     width: 80%;
     max-width: 400px;
+    height: 400px;
+    overflow: auto;
     border-radius: 10px;
     position: relative;
 }
@@ -502,7 +521,7 @@ header h5 {
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 1005;
+    z-index: 1007;
 }
 .spinner {
     border: 4px solid rgba(255, 255, 255, 0.3);
