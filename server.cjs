@@ -949,6 +949,47 @@ app.delete('/api/users/:id', async (req, res) => {
   }
 });
 
+// ===========================GUEST===========================
+app.get("/api/hospitals", async (req, res) => {
+  const { lat, lon } = req.query;
+
+  if (!lat || !lon) {
+    return res.status(400).json({ error: "Missing lat/lon" });
+  }
+  
+  const lonNum = parseFloat(lon);
+  const latNum = parseFloat(lat);
+
+  if (isNaN(latNum) || isNaN(lonNum)) {
+    return res.status(400).json({ error: "Invalid coordinates" });
+  }
+
+  const lonMin = lonNum - 0.1;
+  const lonMax = lonNum + 0.1;
+  const latMin = latNum - 0.1;
+  const latMax = latNum + 0.1;
+
+  const url = `https://nominatim.openstreetmap.org/search?format=json&q=hospital&limit=10&bounded=1&viewbox=${lonMin},${latMax},${lonMax},${latMin}`;
+
+  try {
+    const response = await fetch(url, {
+      headers: {
+        "User-Agent": "YourAppName/1.0 (your@email.com)", // required by Nominatim
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Nominatim error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    res.json(data);
+  } catch (err) {
+    console.error("Error fetching hospitals:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 
 app.listen(PORT, async () => {
   console.log(`Server running on port ${PORT}`);

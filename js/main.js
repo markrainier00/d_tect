@@ -878,9 +878,13 @@ function getDistance(lat1, lon1, lat2, lon2) {
 }
 
 async function getNearbyHospitals(lat, lon) {
-    const url = `https://nominatim.openstreetmap.org/search?format=json&q=hospital&limit=10&bounded=1&viewbox=${lon - 0.1},${lat + 0.1},${lon + 0.1},${lat - 0.1}`;
-    const res = await fetch(url);
+    const res = await fetch(`/api/hospitals?lat=${lat}&lon=${lon}`);
     const data = await res.json();
+
+    if (!Array.isArray(data)) {
+        console.error("Unexpected data from API:", data);
+        return;
+    }
 
     const list = document.getElementById('hospital-list');
     list.innerHTML = '';
