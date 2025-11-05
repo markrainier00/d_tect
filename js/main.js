@@ -834,7 +834,6 @@ async function loadContactDetails() {
             ${row.address}<br>
             ${row.phone ? `Phone: <a href="tel:${row.phone}">${row.phone}</a><br>` : ''}
             ${row.email ? `Email: <a href="mailto:${row.email}">${row.email}</a><br>` : ''}
-            ${row.facebook_url ? `Facebook: <a href="${row.facebook_url}" target="_blank">${row.facebook_url}</a>` : ''}
             </p>`;
 
         container.appendChild(block);

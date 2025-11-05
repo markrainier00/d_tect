@@ -134,7 +134,6 @@ async function fetchContent() {
                 <td><textarea class="address-input">${item.address}</textarea></td>
                 <td><textarea class="phone-input">${item.phone}</textarea></td>
                 <td><textarea class="email-input">${item.email}</textarea></td>
-                <td><textarea class="facebook-input">${item.facebook_url}</textarea></td>
                 <td>
                     <button class="update-btn">Update</button>
                     <button class="delete-btn">Delete</button>
@@ -196,7 +195,6 @@ function attachRowEventListeners() {
                     address: row.querySelector('.address-input').value,
                     phone: row.querySelector('.phone-input').value,
                     email: row.querySelector('.email-input').value,
-                    facebook_url: row.querySelector('.facebook-input').value
                 };
             }
 
@@ -429,13 +427,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const address = document.getElementById('newAddress').value.trim();
         const phone = document.getElementById('newPhone').value.trim();
         const email = document.getElementById('newEmail').value.trim();
-        const facebook_url = document.getElementById('newFacebook').value.trim();
 
         try {
             const res = await fetch('/api/addContact', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ office_name, address, phone, email, facebook_url })
+                body: JSON.stringify({ office_name, address, phone, email })
             });
 
             const result = await res.json();
