@@ -472,6 +472,7 @@ async function loadBarangayData() {
 
         listContainer.innerHTML = `
         <table style="width: 100%; border-collapse: collapse; text-align: left;">
+            <thead><th>Barangay</td><th>Attack Rate</td><th>Risk Level</td></thead>
             <tbody>
             ${rateData.map(b => {
                 let color = '';
@@ -483,7 +484,7 @@ async function loadBarangayData() {
                 <tr>
                     <td style="padding: 8px; border-bottom: 1px solid #ddd;">${b.Barangay}</td>
                     <td style="padding: 8px; border-bottom: 1px solid #ddd;">${b.attack_rate.toFixed(2)}</td>
-                    <td style="padding: 8px; border-bottom: 1px solid #ddd; font-weight: bold; color: ${color};">
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd; color: ${color};">
                     ${b.risk_classification}
                     </td>
                 </tr>
@@ -530,15 +531,44 @@ async function loadBarangayData() {
             });
 
             document.getElementById('barangay-details').innerHTML = `
-                <h3>${barangay}</h3>
-                <p><strong>Male:</strong> ${totalMale}</p>
-                <p><strong>Female:</strong> ${totalFemale}</p>
-                <h4>Cases by Age Group:</h4>
-                <ul style="list-style-type: none; padding-left: 0;">
-                    ${Object.entries(ageGroups)
-                        .map(([age, total]) => `<li>${age}: ${total}</li>`)
-                        .join('')}
-                </ul>
+                <h3>${barangay}</h3><div style="text-align: center;">
+                <table style="margin: auto; border-collapse: collapse;">
+                    <thead>
+                        <tr>
+                            <th style="border-bottom: 2px solid #ddd; padding: 6px;">Gender</th>
+                            <th style="border-bottom: 2px solid #ddd; padding: 6px;">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="padding: 6px;">Male</td>
+                            <td style="padding: 6px;">${totalMale}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 6px;">Female</td>
+                            <td style="padding: 6px;">${totalFemale}</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <table style="margin: auto; border-collapse: collapse;">
+                    <thead>
+                        <tr>
+                            <th style="border-bottom: 2px solid #ddd; padding: 6px;">Age Group</th>
+                            <th style="border-bottom: 2px solid #ddd; padding: 6px;">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${Object.entries(ageGroups)
+                            .map(([age, total]) => `
+                            <tr>
+                                <td style="padding: 6px;">${age}</td>
+                                <td style="padding: 6px;">${total}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
             `;
         });
     } catch (err) {
@@ -695,13 +725,14 @@ async function getForecastDataAndDisplay() {
 
             tableBody.innerHTML = `
             <table style="width: 100%; border-collapse: collapse; text-align: left;">
+            <thead><th>Barangay</td><th>Risk Level</td></thead>
                 </tbody>
                     ${sortedWeekData.map(d => {
                         const color = getColorForRiskClassification(d.predicted_risk);
                         return `
                         <tr>
                             <td style="padding: 8px; border-bottom: 1px solid #ddd;">${d.Barangay}</td>
-                            <td style="padding: 8px; border-bottom: 1px solid #ddd; font-weight: bold; color: ${color};">${d.predicted_risk}</td>
+                            <td style="padding: 8px; border-bottom: 1px solid #ddd; color: ${color};">${d.predicted_risk}</td>
                         </tr>
                     `;
                     }).join("")}
