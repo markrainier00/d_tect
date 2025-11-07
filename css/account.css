@@ -88,11 +88,6 @@ a:visited {
     color: #1e3c72;
     border-bottom-color: transparent;
 }
-.signup-link {
-    align-items: center;
-    text-align: center;
-    margin-top: 40px;
-}
 
 /* Modal */
 .modal {
@@ -128,8 +123,7 @@ a:visited {
 .name input {
     flex: 1;
 }
-#signup input,
-#signup select, #reset-email, #reset-password-form input {
+#reset-email, #reset-password-form input {
     width: 100%;
     padding: 12px;
     border: 1px solid #ccc;
@@ -139,7 +133,7 @@ a:visited {
     margin-top: 8px;
     margin-bottom: 16px;
 }
-.signup-submit-btn, .reset-btn {
+.reset-btn {
     padding: 12px 24px;
     border: none;
     border-radius: 5px;
@@ -150,5 +144,5 @@ a:visited {
     margin: 10px auto 0 auto;
 }
 
-.signup-submit-btn, .reset-btn { background-color: #e1f2e0 ; color: #178244; transition: all 0.3s ease-in; }
-.signup-submit-btn:hover, .reset-btn:hover { background-color: #d3e8d3; }
+.reset-btn { background-color: #e1f2e0 ; color: #178244; transition: all 0.3s ease-in; }
+.reset-btn:hover { background-color: #d3e8d3; }

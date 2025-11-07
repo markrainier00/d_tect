@@ -31,8 +31,12 @@ app.get('/reset', (req, res) => {
 });
 
 // Sign up
+function generateTemporaryPassword() {
+  return Math.random().toString(36).slice(-10);
+}
 app.post("/dtect/signup", async (req, res) => {
-  const { email, password, role, first_name, last_name } = req.body;
+  const temporaryPassword = generateTemporaryPassword();
+  const { email, role, first_name, last_name } = req.body;
 
   try {
     const { data: existingUser, error: fetchError } = await supabaseClient
@@ -55,15 +59,16 @@ app.post("/dtect/signup", async (req, res) => {
 
     const { data, error: signupError } = await supabaseClient.auth.signUp({
       email,
-      password,
+      temporaryPassword,
       options: {
         data: {
           name: `${first_name} ${last_name}`,
+          temporaryPassword: temporaryPassword,
           first_name,
           last_name,
           role,
         },
-        emailRedirectTo: "https://www.dtectsystem.online/account?status=confirmed"
+        emailRedirectTo: "https://www.dtectsystem.online/reset"
       },
     });
 
@@ -241,14 +246,20 @@ app.post('/api/reset-password', async (req, res) => {
 
   try {
     const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
-      redirectTo: '/reset'
+      redirectTo: 'https://www.dtectsystem.online/reset'
     });
 
     if (error) throw error;
 
-    res.json({ success: true, message: 'A password reset link has been sent to your email.' });
+    res.json({ 
+      success: true,
+      message: 'A password reset link has been sent to your email.'
+    });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({
+      success: false,
+      message: err.message || 'Failed to send password reset email.'
+    });
   }
 });
 

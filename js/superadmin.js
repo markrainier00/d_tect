@@ -197,8 +197,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const forgotForm = document.getElementById('forgot-form');
     const forgotPassword = document.getElementById('forgot-password');
     const logout = document.getElementById('logout');
+    const signupBtn = document.getElementById('signup-btn');
+    const signup = document.getElementById('signup');
+    const signupForm = document.getElementById('signup-form');
 
     // Open Modals
+    if (signupBtn && signup) {
+        signupBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            signup.style.display = 'flex';
+        });
+    }
+
     if (resetBtn && forgotPassword) {
         resetBtn.addEventListener('click', (e) => {
             e.preventDefault();
@@ -216,12 +226,59 @@ document.addEventListener('DOMContentLoaded', () => {
             deleteModal.style.display = 'none';
             deleteUserId = null;
         }
+        if (e.target === signup) {
+            signup.style.display = 'none';
+            signupForm.reset();
+        }
     });
     
     cancelDeleteBtn.addEventListener('click', () => {
         deleteModal.style.display = 'none';
         deleteUserId = null;
     });
+
+    // Sign Up
+    if (signupForm && signup) {
+        signupForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const firstname = signup.querySelector('#firstname').value.trim();
+            const lastname = signup.querySelector('#lastname').value.trim();
+            const role = document.getElementById('user-role')?.value || '';
+            const email = signup.querySelector('#signup-email').value;
+
+            const capitalizeWords = (str) =>
+                str
+                    .toLowerCase()
+                    .replace(/\b\w/g, (char) => char.toUpperCase());
+
+            const first_name = capitalizeWords(firstname);
+            const last_name = capitalizeWords(lastname);
+            
+            try {
+                const response = await fetch('/dtect/signup', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, first_name, last_name, role }),
+                });
+
+                const data = await response.json();
+                const message = data.message || "An error occurred during log in.";
+
+                if (!response.ok || !data.success) {
+                    showStatus("Sign Up Error", message, { showButton: true });
+                    return;
+                }
+                showStatus("Signed Up Successfully", message, { showButton: false });
+            } catch (error) {
+                console.error('Sign up error:', error);
+                showStatus("Sign Up Error",`Something went wrong during sign up.`, { showButton: true });
+            } finally {
+                signupForm.reset();
+                signup.style.display = 'none';
+            }
+        });
+    }
 
     // Log out
     if (logout) {

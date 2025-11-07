@@ -108,7 +108,7 @@ header h5 {
     flex-direction: column;
 }
 
-#forgot-password input {
+#signup input, #signup select, #forgot-password input {
     width: 100%;
     padding: 12px;
     border: 1px solid #ccc;
@@ -132,6 +132,17 @@ header h5 {
 #log-record { margin: 20px 10px 20px 10px; }
 #user-management { margin: 20px 10px 100px 10px; }
 
+.form-group {margin-bottom: 15px;}
+.form-group #login-email, #login-password, #new-password {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 20px ;
+    box-shadow: 0 0 2px rgba(0, 0, 0, 0.4);
+    box-sizing: border-box;
+    border-radius: 5px;
+    border: none;
+    background-color: white;
+}
 .table{
     width: 100%;
     border-collapse: collapse;
@@ -264,7 +275,7 @@ button {
 #cancelDeleteBtn, .status-cancel-btn { background-color: #d9534f; }
 #confirmDeleteBtn:hover, .status-ok-btn:hover { background-color: #345490; }
 #cancelDeleteBtn:hover, .status-cancel-btn:hover { background-color: #c64c48; }
-.status-ok-btn, .status-cancel-btn, .reset-btn {
+.status-ok-btn, .status-cancel-btn, .signup-submit-btn, .reset-btn {
     color: white;
     padding: 8px;
     border: none;
@@ -274,5 +285,5 @@ button {
     margin-top: 20px;
     transition: all 0.3s ease-in;
 }
-.reset-btn { background-color: #2ecc71; }
-.reset-btn:hover { background-color: #2ab664; }
+.signup-submit-btn, .reset-btn { background-color: #2ecc71; }
+.signup-submit-btn:hover, .reset-btn:hover { background-color: #2ab664; }
