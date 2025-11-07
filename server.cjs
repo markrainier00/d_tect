@@ -32,7 +32,10 @@ app.get('/reset', (req, res) => {
 
 // Sign up
 app.post("/dtect/signup", async (req, res) => {
-  const temporaryPassword = Math.random().toString(36).slice(-10);
+  const password = Array.from({length: 12}, () => 
+    Math.random().toString(36)[2]
+  ).join('');
+
   const { email, role, first_name, last_name } = req.body;
 
   try {
@@ -56,11 +59,11 @@ app.post("/dtect/signup", async (req, res) => {
 
     const { data, error: signupError } = await supabaseClient.auth.signUp({
       email,
-      temporaryPassword,
+      password,
       options: {
         data: {
           name: `${first_name} ${last_name}`,
-          temporaryPassword: temporaryPassword,
+          temporaryPassword: password,
           first_name,
           last_name,
           role,
