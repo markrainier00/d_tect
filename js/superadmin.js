@@ -147,7 +147,7 @@ async function fetchUsers() {
 
                 } catch (err) {
                     e.target.checked = previousState;
-                    showStatus("D-TECT", "Failed to update user status. Please check your connection and try again.", { showButton: true });
+                    showStatus("D-TECT", "Failed to update user status.", { showButton: true });
                 }
             });
 
@@ -161,7 +161,7 @@ async function fetchUsers() {
 
 
     } catch (err) {
-        showStatus("D-TECT", "Unable to load users. Please try again later.", { showButton: true });
+        showStatus("D-TECT", "Unable to load users.", { showButton: true });
     }
 }
 async function fetchLogs() {
@@ -185,7 +185,7 @@ async function fetchLogs() {
         });
 
     } catch (err) {
-        showStatus("D-TECT", "Failed to retrieve logs. Please refresh the page.", { showButton: true });
+        showStatus("D-TECT", "Failed to retrieve logs.", { showButton: true });
     }
 }
 
