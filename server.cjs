@@ -26,7 +26,7 @@ app.get('/', (req, res) => {
 app.get('/account', (req, res) => {
   res.sendFile(path.join(__dirname, 'account.html'));
 });
-app.get('/reset', (req, res) => {
+app.get('/setpassword', (req, res) => {
   res.sendFile(path.join(__dirname, 'reset.html'));
 });
 
@@ -68,7 +68,7 @@ app.post("/dtect/signup", async (req, res) => {
           last_name,
           role,
         },
-        emailRedirectTo: "https://www.dtectsystem.online/reset"
+        emailRedirectTo: "https://www.dtectsystem.online/setpassword"
       },
     });
 
@@ -246,7 +246,7 @@ app.post('/api/reset-password', async (req, res) => {
 
   try {
     const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
-      redirectTo: 'https://www.dtectsystem.online/reset'
+      redirectTo: 'https://www.dtectsystem.online/setpassword'
     });
 
     if (error) throw error;

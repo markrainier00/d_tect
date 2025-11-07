@@ -64,6 +64,30 @@ function showStatus(title, message, options = {}) {
         }, duration);
     }
 }
+
+window.addEventListener('DOMContentLoaded', () => {
+    const params = new URLSearchParams(window.location.hash.substring(1));
+    const error = params.get('error');
+    const errorDescription = params.get('error_description');
+
+    if (error && errorDescription) {
+        showStatus(
+            "Password Reset Error",
+            decodeURIComponent(errorDescription.replace(/\+/g, ' ')),
+            { 
+                showButton: true,
+                buttonText: "Okay",
+                callback: () => {
+                    window.location.href = '/';
+                }
+            }
+        );
+
+        window.location.hash = '';
+    }
+});
+
+
 const supabaseClient = supabase.createClient(
     "https://yxvgwmxlznpxqmmiofuy.supabase.co",
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl4dmd3bXhsem5weHFtbWlvZnV5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2OTU5NzYsImV4cCI6MjA2NzI3MTk3Nn0.4XZQOkWmI1CLq-FR3KM5sD7ohn0iHdcRqrf5-KFmkho"
