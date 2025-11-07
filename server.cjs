@@ -53,7 +53,7 @@ app.post("/dtect/signup", async (req, res) => {
     if (existingUser) {
       return res.status(400).json({
         success: false,
-        message: "This email is already in use. Try logging in or resetting your password."
+        message: "This email is already in use."
       });
     }
 
@@ -73,13 +73,13 @@ app.post("/dtect/signup", async (req, res) => {
     });
 
     if (signupError) {
-      console.error('Signup error:', signupError);
+      console.error('Account Creation Error:', signupError);
       return res.status(400).json({ success: false, message: signupError.message });
     }
 
     const user = data.user;
     if (!user || !user.id) {
-      return res.status(500).json({ success: false, message: "User ID not found after sign up." });
+      return res.status(500).json({ success: false, message: "User ID not found after account creation." });
     }
 
     const { error: insertError } = await supabaseClient
@@ -97,7 +97,7 @@ app.post("/dtect/signup", async (req, res) => {
       console.error('Error inserting profile:', insertError);
       return res.status(500).json({ success: false, message: "Failed to create profile." });
     }
-    res.status(200).json({ success: true, message: "Sign up successful! Please check your email to confirm." });
+    res.status(200).json({ success: true, message: `Account Created! Email is sent to ${first_name} ${last_name} (${email}).` });
   } catch (err) {
     console.error('Server error during signup:', err);
     res.status(500).json({ success: false, message: 'Internal server error' });

@@ -100,12 +100,12 @@ document.getElementById('reset-password-form').addEventListener('submit', async 
     const confirmPassword = document.getElementById('confirm-password').value;
 
     if (!newPassword || !confirmPassword) {
-        showStatus("Reset Password", "Please enter and confirm your new password.", { showButton: true });
+        showStatus("Set Password", "Please enter and confirm your new password.", { showButton: true });
         return;
     }
 
     if (newPassword !== confirmPassword) {
-        showStatus("Reset Password", "Passwords do not match!", { showButton: true });
+        showStatus("Set Password", "Passwords do not match!", { showButton: true });
         return;
     }
 

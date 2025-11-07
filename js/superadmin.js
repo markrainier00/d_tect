@@ -263,16 +263,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
 
                 const data = await response.json();
-                const message = data.message || "An error occurred during log in.";
+                const message = data.message || "An error occurred during account creation.";
 
                 if (!response.ok || !data.success) {
                     showStatus("Sign Up Error", message, { showButton: true });
                     return;
                 }
-                showStatus("Signed Up Successfully", message, { showButton: false });
+                showStatus("Account Created", message, { showButton: false });
             } catch (error) {
-                console.error('Sign up error:', error);
-                showStatus("Sign Up Error",`Something went wrong during sign up.`, { showButton: true });
+                console.error('Account creation error:', error);
+                showStatus("Account creation Error",`Something went wrong during account creation.`, { showButton: true });
             } finally {
                 signupForm.reset();
                 signup.style.display = 'none';
