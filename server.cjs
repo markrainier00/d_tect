@@ -31,11 +31,8 @@ app.get('/reset', (req, res) => {
 });
 
 // Sign up
-function generateTemporaryPassword() {
-  return Math.random().toString(36).slice(-10);
-}
 app.post("/dtect/signup", async (req, res) => {
-  const temporaryPassword = generateTemporaryPassword();
+  const temporaryPassword = Math.random().toString(36).slice(-10);
   const { email, role, first_name, last_name } = req.body;
 
   try {
