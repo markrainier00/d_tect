@@ -307,12 +307,8 @@ async function getMapDataAndDisplay() {
         });
 
         const map1 = L.map('barangay-map1').setView([14.05, 121.33], 11);
-        const map2 = L.map('barangay-map2').setView([14.05, 121.32], 11);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; OpenStreetMap contributors'}).addTo(map1);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap contributors'}).addTo(map2);
-        
         const barangayLayer1 = L.geoJSON(geojsonData, {
             style: function(feature) {
                 const riskClassification = feature.properties.risk_classification;
@@ -346,41 +342,6 @@ async function getMapDataAndDisplay() {
             }
         });
         barangayLayer1.addTo(map1);
-        
-        const barangayLayer2 = L.geoJSON(geojsonData, {
-            style: function(feature) {
-                const riskClassification = feature.properties.risk_classification;
-                return {
-                    color: '#1e3c72',
-                    weight: 0.5,
-                    opacity: 1,
-                    fillColor: getColorForRiskClassification(riskClassification),
-                    fillOpacity: 1
-                };
-            },
-            onEachFeature: function(feature, layer) {
-                const barangayName = feature.properties.name;
-                const riskClassification = feature.properties.risk_classification || "Unknown";
-                layer.bindPopup(`<b>${barangayName}</b><br>Risk: ${riskClassification}`);
-                
-                layer.on({
-                    mouseover: function(e) {
-                        e.target.setStyle({
-                            weight: 3,
-                            color: '#1e3c72'
-                        });
-                    },
-                    mouseout: function(e) {
-                        e.target.setStyle({
-                            weight: 0.5,
-                            color: '#1e3c72'
-                        });
-                    },
-                    click: () => loadBarangayData(barangayName)
-                });
-            }
-        });
-        barangayLayer2.addTo(map2);
 
         const legend1 = L.control({ position: 'bottomright' });
         legend1.onAdd = function () {
@@ -406,6 +367,42 @@ async function getMapDataAndDisplay() {
             return div;
         };
         legend1.addTo(map1);
+        
+        const map2 = L.map('barangay-map2').setView([14.05, 121.32], 11);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'}).addTo(map2);
+        const barangayLayer2 = L.geoJSON(geojsonData, {
+            style: function(feature) {
+                const riskClassification = feature.properties.risk_classification;
+                return {
+                    color: '#1e3c72',
+                    weight: 0.5,
+                    opacity: 1,
+                    fillColor: getColorForRiskClassification(riskClassification),
+                    fillOpacity: 1
+                };
+            },
+            onEachFeature: function(feature, layer) {
+                const barangayName = feature.properties.name;
+                const riskClassification = feature.properties.risk_classification || "Unknown";
+                layer.bindPopup(`<b>${barangayName}</b><br>Risk: ${riskClassification}`);
+                
+                layer.on({
+                    mouseover: function(e) {
+                        e.target.setStyle({
+                            weight: 3
+                        });
+                    },
+                    mouseout: function(e) {
+                        e.target.setStyle({
+                            weight: 0.5
+                        });
+                    },
+                    click: () => loadBarangayData(barangayName)
+                });
+            }
+        });
+        barangayLayer2.addTo(map2);
 
         const legend2 = L.control({ position: 'bottomright' });
         legend2.onAdd = function () {
@@ -602,22 +599,23 @@ async function getForecastDataAndDisplay() {
 
         forecastMap = L.map("forecast-map").setView([14.05, 121.33], 11);
         L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-            attribution: "&copy; OpenStreetMap contributors"
-        }).addTo(forecastMap);
+            attribution: "&copy; OpenStreetMap contributors"}).addTo(forecastMap);
 
         const legend = L.control({ position: "bottomright" });
         legend.onAdd = function () {
             const div = L.DomUtil.create("div", "info legend");
             const riskLevels = ["Low Risk", "Moderate Risk", "High Risk", "No Forecast"];
             const colors = ["#2ECC71", "#FFD700", "#FF6347", "#808080"];
+            
             for (let i = 0; i < riskLevels.length; i++) {
                 div.innerHTML += `
-                    <span style="display:inline-flex;align-items:center;margin-right:10px;">
+                    <span style="display: inline-flex; align-items: center; margin-right: 10px;">
                         <i style="
                             background:${colors[i]};
                             border:1px solid #000;
                             width:10px;
                             height:10px;
+                            display: inline-block;
                             margin-right:3px;">
                         </i>
                         ${riskLevels[i]}
@@ -961,7 +959,7 @@ function showInitialMessage() {
     const list = document.getElementById('hospital-list');
     list.innerHTML = `
         <tr>
-            <td colspan="3" style="text-align:center; padding: 20px; color: #555;">
+            <td colspan="3" style="text-align:center; padding: 20px; color: #555; font-size: medium">
                 Click on the map to show nearby hospitals in <strong>San Pablo City</strong>.
             </td>
         </tr>
