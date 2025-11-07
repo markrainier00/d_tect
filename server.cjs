@@ -97,7 +97,7 @@ app.post("/dtect/signup", async (req, res) => {
       console.error('Error inserting profile:', insertError);
       return res.status(500).json({ success: false, message: "Failed to create profile." });
     }
-    res.status(200).json({ success: true, message: `Account Created! Email is sent to ${first_name} ${last_name} (${email}).` });
+    res.status(200).json({ success: true, message: `Account Created. Email is sent to user.` });
   } catch (err) {
     console.error('Server error during signup:', err);
     res.status(500).json({ success: false, message: 'Internal server error' });
