@@ -874,27 +874,20 @@ async function loadContactDetails() {
 let map;
 
 function initMap(lat, lon) {
-    map = L.map('hospital_map').setView([lat, lon], 13);
+    const sanPabloLat = 14.0685;
+    const sanPabloLon = 121.3259;
+
+    map = L.map('hospital_map').setView([sanPabloLat, sanPabloLon], 13);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors'}).addTo(map);
+        attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
 
-    // User location marker
-    const redIcon = new L.Icon({
-        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
-        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-        iconSize: [25, 41],
-        iconAnchor: [12, 41],
-        popupAnchor: [1, -34],
-        shadowSize: [41, 41]
-    });
-    L.marker([lat, lon], { icon: redIcon }).addTo(map)
-        .bindPopup("You are here")
-        .openPopup();
+    enableClickSelection();
 }
 
 function getDistance(lat1, lon1, lat2, lon2) {
-    const R = 6371; // Radius of Earth in km
+    const R = 6371;
     const dLat = (lat2 - lat1) * Math.PI / 180;
     const dLon = (lon2 - lon1) * Math.PI / 180;
     const a =
@@ -904,60 +897,78 @@ function getDistance(lat1, lon1, lat2, lon2) {
         Math.sin(dLon / 2) *
         Math.sin(dLon / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c; // Distance in km
+    return R * c;
+}
+
+function enableClickSelection() {
+    let userMarker = null;
+    map.on('click', async e => {
+        const { lat, lng } = e.latlng;
+        if (userMarker) map.removeLayer(userMarker);
+
+        userMarker = L.marker([lat, lng], { 
+            icon: new L.Icon({
+                iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
+                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+                iconSize: [25, 41],
+                iconAnchor: [12, 41],
+                popupAnchor: [1, -34],
+                shadowSize: [41, 41]
+            })
+        }).addTo(map).openPopup();
+
+        await getNearbyHospitals(lat, lng);
+    });
 }
 
 async function getNearbyHospitals(lat, lon) {
-    const res = await fetch(`/api/hospitals?lat=${lat}&lon=${lon}`);
+    const sanPabloLat = 14.0685;
+    const sanPabloLon = 121.3259;
+
+    const res = await fetch(`/api/hospitals?lat=${sanPabloLat}&lon=${sanPabloLon}`);
     const data = await res.json();
 
-    if (!Array.isArray(data)) {
-        console.error("Unexpected data from API:", data);
-        return;
-    }
+    const filtered = data.filter(h =>
+        h.display_name.toLowerCase().includes("san pablo")
+    );
 
-    const list = document.getElementById('hospital-list');
-    list.innerHTML = '';
-
-    // Add distance to each hospital object
-    const hospitalsWithDistance = data.map(hospital => {
+    
+    const hospitalsWithDistance = filtered.map(hospital => {
         const hospitalLat = parseFloat(hospital.lat);
         const hospitalLon = parseFloat(hospital.lon);
         const distance = getDistance(lat, lon, hospitalLat, hospitalLon);
         return { ...hospital, distance };
-    });
+    }).sort((a, b) => a.distance - b.distance);
 
-    // Sort by distance
-    hospitalsWithDistance.sort((a, b) => a.distance - b.distance);
+    const list = document.getElementById('hospital-list');
+    list.innerHTML = '';
 
-    // Add to table and map
     hospitalsWithDistance.forEach(hospital => {
         const name = hospital.display_name.split(',')[0].trim();
         const addressParts = hospital.display_name.split(',').slice(1, -3).map(p => p.trim());
         const cleanAddress = addressParts.join(', ');
 
-        // Table row
         const row = document.createElement('tr');
         row.innerHTML = `<td>${name}</td><td>${cleanAddress}</td><td>${hospital.distance.toFixed(2)} km</td>`;
         list.appendChild(row);
 
-        // Map marker
         L.marker([hospital.lat, hospital.lon])
-        .addTo(map)
-        .bindPopup(`<strong>${name}</strong><br>${cleanAddress}<br>${hospital.distance.toFixed(2)} km away`);
+            .addTo(map)
+            .bindPopup(`<strong>${name}</strong><br>${cleanAddress}<br>${hospital.distance.toFixed(2)} km away`);
     });
 }
-
-navigator.geolocation.getCurrentPosition(
-    pos => {
-        const { latitude, longitude } = pos.coords;
-        initMap(latitude, longitude);
-        getNearbyHospitals(latitude, longitude);
-    },
-    err => {
-        alert("Location access denied or unavailable.");
-    }
-);
+function showInitialMessage() {
+    const list = document.getElementById('hospital-list');
+    list.innerHTML = `
+        <tr>
+            <td colspan="3" style="text-align:center; padding: 20px; color: #555;">
+                Click on the map to show nearby hospitals in <strong>San Pablo City</strong>.
+            </td>
+        </tr>
+    `;
+}
+initMap();
+showInitialMessage();
 
 document.addEventListener('DOMContentLoaded', () => {
     fetchData();
