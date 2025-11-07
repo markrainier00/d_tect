@@ -450,7 +450,7 @@ thead th {
         max-width: 400px;
     }
     .barangay-list, .forecast-list {
-        min-width: 125px;
+        min-width: 100px;
         height: 200px;
     }
     .dashboard-card {
