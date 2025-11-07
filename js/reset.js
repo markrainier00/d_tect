@@ -105,7 +105,7 @@ document.getElementById('reset-password-form').addEventListener('submit', async 
     }
 
     if (newPassword !== confirmPassword) {
-        showStatus("Set Password", "Passwords do not match!", { showButton: true });
+        showStatus("Set Password", "Passwords do not match.", { showButton: true });
         return;
     }
 
@@ -130,7 +130,7 @@ document.getElementById('reset-password-form').addEventListener('submit', async 
         if (error) {
             showStatus("Error Resetting Password", error.message, { showButton: true });
         } else {
-            showStatus("Password Updated", "Your password has been successfully updated!", {
+            showStatus("Password Updated", "Your password has been successfully updated.", {
                 showButton: false,
                 callback: () => {
                     window.location.href = '/account';

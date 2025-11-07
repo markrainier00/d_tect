@@ -271,12 +271,23 @@ button {
     justify-content: center;
     gap: 5px;
 }
-#confirmDeleteBtn, .status-ok-btn { background-color: #1e3c72; }
-#cancelDeleteBtn, .status-cancel-btn { background-color: #d9534f; }
-#confirmDeleteBtn:hover, .status-ok-btn:hover { background-color: #345490; }
-#cancelDeleteBtn:hover, .status-cancel-btn:hover { background-color: #c64c48; }
+.add-btn {
+    font-weight: 500;
+    border: none;
+    border-radius: 5px;
+    padding: 5px 5px;
+    margin-left: 3px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease-in;
+}
+.add-btn { background-color: #e0ebff; color: #4c6ea7; width: 150px; align-self: flex-end; }
+.add-btn:hover { background-color: #ced8eb; }
+#confirmDeleteBtn, .status-ok-btn { background-color: #e0e7f2; color: #1e3c72; }
+#cancelDeleteBtn, .status-cancel-btn { background-color: #f2e0e0; color: #d9534f; }
+#confirmDeleteBtn:hover, .status-ok-btn:hover { background-color: #d3dce8; }
+#cancelDeleteBtn:hover, .status-cancel-btn:hover { background-color: #e8d3d3; }
 .status-ok-btn, .status-cancel-btn, .signup-submit-btn, .reset-btn {
-    color: white;
     padding: 8px;
     border: none;
     border-radius: 5px;
@@ -285,5 +296,5 @@ button {
     margin-top: 20px;
     transition: all 0.3s ease-in;
 }
-.signup-submit-btn, .reset-btn { background-color: #2ecc71; }
-.signup-submit-btn:hover, .reset-btn:hover { background-color: #2ab664; }
+.signup-submit-btn, .reset-btn { background-color: #e1f2e0 ; color: #178244; transition: all 0.3s ease-in; }
+.signup-submit-btn:hover, .reset-btn:hover { background-color: #d3e8d3; }
