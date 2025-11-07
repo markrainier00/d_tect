@@ -270,6 +270,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     return;
                 }
                 showStatus("Account Created", message, { showButton: false });
+
+                fetchUsers();
             } catch (error) {
                 console.error('Account creation error:', error);
                 showStatus("Account creation Error",`Something went wrong during account creation.`, { showButton: true });
