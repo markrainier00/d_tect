@@ -448,6 +448,8 @@ thead th {
     .forecast-card, .barangay-card {
         min-width: 100px;
         max-width: 400px;
+    }
+    .forecast-card {
         margin: 0;
     }
     .barangay-list, .forecast-list {
