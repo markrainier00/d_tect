@@ -439,14 +439,14 @@ thead th {
 }
 @media (max-width: 650px) {
     #forecast, #barangay {
-        padding: 40px 20px;
+        padding: 40px 10px;
     }
     #barangay-map2, #forecast-map {
         min-width: 150px;
         min-height: 200px;
     }
     .forecast-card {
-        min-width: 150px;
+        min-width: 100px;
         max-width: 400px;
     }
     .forecast-list {
