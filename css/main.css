@@ -442,15 +442,15 @@ thead th {
         padding: 40px 20px;
     }
     #barangay-map2, #forecast-map {
-        min-width: 200px;
+        min-width: 150px;
         min-height: 200px;
     }
     .forecast-card {
-        min-width: 200px;
+        min-width: 150px;
         max-width: 400px;
     }
     .forecast-list {
-        min-width: 200px;
+        min-width: 150px;
     }
     .barangay-list, .forecast-list {
         height: 200px;
