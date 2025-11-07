@@ -86,13 +86,20 @@ document.getElementById('reset-password-form').addEventListener('submit', async 
     }
 
     try {
+        const { data: { user: currentUser }, error: getUserError } = await supabaseClient.auth.getUser();
+
+        if (getUserError || !currentUser) {
+            showStatus("Error", "Could not retrieve user info.", { showButton: true });
+            return;
+        }
+
         const { data, error } = await supabaseClient.auth.updateUser({
             password: newPassword,
             data: {
-                name: user.user_metadata.name,
-                first_name: user.user_metadata.first_name,
-                last_name: user.user_metadata.last_name,
-                role: user.user_metadata.role,
+                name: currentUser.user_metadata.name,
+                first_name: currentUser.user_metadata.first_name,
+                last_name: currentUser.user_metadata.last_name,
+                role: currentUser.user_metadata.role,
             }
         });
 
