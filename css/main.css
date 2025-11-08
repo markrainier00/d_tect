@@ -447,6 +447,7 @@ thead th {
 @media (max-width: 650px) {
     #forecast, #barangay {
         padding: 40px 10px;
+        text-align: center;
     }
     #barangay-map2, #forecast-map {
         min-width: 200px;
@@ -463,12 +464,12 @@ thead th {
         min-width: 100px;
         height: 200px;
     }
-    .section-title, .forecast-card, .barangay-card, .message h1 {
-        font-size: medium;
+    .section-title, #forecast-barangay, #barangay-search,
+    #barangay-details h3, #barangay-details th, #barangay-details td, .message h1  {
+        font-size: large;
     }
     .message p {
         font-size: small;
-        color: red;
     }
     .dashboard-card {
         padding: 10px;
