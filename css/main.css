@@ -468,6 +468,7 @@ thead th {
     }
     .message p {
         font-size: small;
+        color: red;
     }
     .dashboard-card {
         padding: 10px;
