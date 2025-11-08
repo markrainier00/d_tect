@@ -463,8 +463,11 @@ thead th {
         min-width: 100px;
         height: 200px;
     }
-    .section-title {
+    .section-title, .forecast-card, .barangay-card, .message h1 {
         font-size: medium;
+    }
+    .message p {
+        font-size: small;
     }
     .dashboard-card {
         padding: 10px;
