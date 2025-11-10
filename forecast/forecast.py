@@ -144,5 +144,5 @@ def main(mode="barangay", num_weeks=10):
     print(forecast_df.to_json(orient="records"))
 if __name__ == "__main__":
     mode = sys.argv[1] if len(sys.argv) > 1 else "barangay"
-    num_weeks = int(sys.argv[1]) if len(sys.argv) > 2 else 10
+    num_weeks = int(sys.argv[2]) if len(sys.argv) > 2 else 10
     main(mode, num_weeks)

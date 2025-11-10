@@ -289,17 +289,23 @@ app.post("/dtect/verify-auth", async (req, res) => {
   });
 });
 
-function runForecast() {
+// =========FORECAST=========
+async function runForecast(mode = "barangay", numWeeks = 10) {
   return new Promise((resolve, reject) => {
     const script = path.join(__dirname, 'forecast', 'forecast.py')
-    const py = spawn('python', [script], {
+    const py = spawn('python', [script, mode, numWeeks.toString()], {
       env: {
         ...process.env,
       },
-      stdio: ['ignore', 'ignore', 'pipe']
+      stdio: ['ignore', 'pipe', 'pipe']
     })
 
+    let output = "";
     let errorOutput = ''
+
+    py.stdout.on("data", (data) => {
+      output += data.toString();
+    });
 
     py.stderr.on('data', (err) => {
       errorOutput += err.toString()
@@ -307,16 +313,26 @@ function runForecast() {
 
     py.on('close', (code) => {
       if (code !== 0) {
-        return reject(new Error(errorOutput || 'Python script failed'))
+        return reject(new Error(errorOutput || `Python exited with code ${code}`));
       }
-      resolve()
+
+      try {
+        const forecastData = JSON.parse(output);
+        resolve(forecastData);
+      } catch (e) {
+        reject(new Error("Failed to parse JSON: " + e.message));
+      }
     })
   })
 }
+module.exports = { runForecast };
 app.get('/forecast', async (req, res) => {
+  const mode = req.query.mode || "barangay";
+  const weeks = parseInt(req.query.weeks) || 10;
+
   try {
-    await runForecast()
-    res.end()
+    const forecastData = await runForecast(mode, weeks);
+    res.json({ success: true, mode, weeks, data: forecastData });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message })
   }
@@ -1001,13 +1017,27 @@ app.get("/api/hospitals", async (req, res) => {
   }
 });
 
+async function runPython(script) {
+  return new Promise((resolve, reject) => {
+    const process = spawn("python", [script]);
+
+    process.stdout.on("data", (data) => console.log(data.toString()));
+    process.stderr.on("data", (data) => console.error(data.toString()));
+
+    process.on("close", (code) => {
+      if (code === 0) resolve();
+      else reject(new Error(`${script} exited with code ${code}`));
+    });
+  });
+}
 
 app.listen(PORT, async () => {
   console.log(`Server running on port ${PORT}`);
 
   try {
     console.log("Running forecast on server startup...");
-    await runForecast();
+    await runPython("forecast/train_barangay_model.py");
+    await runPython("forecast/train_citywide_model.py");
     console.log("Forecast completed successfully.");
   } catch (err) {
     console.error("Forecast failed:", err.message);
@@ -1017,7 +1047,7 @@ app.listen(PORT, async () => {
 cron.schedule("0 2 * * *", async () => {
   console.log("Running daily forecast...");
   try {
-    await runForecast();
+    await runPython("forecast/train_citywide_model.py");
     console.log("Daily forecast completed successfully.");
   } catch (err) {
     console.error("Daily forecast failed:", err.message);

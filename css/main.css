@@ -210,30 +210,66 @@ header h5 {
 .chart-card a {
     font-size: smaller;
 }
-.barangay-wrapper, .forecast-wrapper {
+.barangay-wrapper, .barangay-forecast {
     display: flex;
     flex-wrap: wrap;
     justify-content: space-around;
 }
-.barangay-map-container, .forecast-map-container {
+.barangay-map-container, .forecast-map-container, .citywide-container {
     display: flex;
     flex-wrap: wrap;
-    flex: 1 1 500px;
-    margin: 0;
-    padding: 5px;
     gap: 20px;
-    background-color: white;
-    border-radius: 10px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
     justify-content: space-around;
     align-items: center;
     text-align: center;
     box-sizing: border-box;
 }
+.barangay-map-container, .forecast-map-container {
+    flex: 1 1 500px;
+}
+.barangay-map-container, .forecast-wrapper, .citywide-container {
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+}
+.barangay-map-container, .forecast-wrapper {
+    margin: 0;
+    padding: 5px;
+}
+.citywide-container {
+    margin: 10px 0 10px 0;
+    padding: 5px 5px 10px 5px;
+}
+#citywide-table {
+    flex: 1 1 0;
+    min-width: 300px;
+    max-width: 450px;
+    min-height: 200px;
+    max-height: 300px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 10px;
+    font-size: small;
+}
+.citywide-card {
+    min-height: 250px;
+    max-height: 400px;
+    min-width: 300px;
+    max-width: 550px;
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 0;
+    margin: 20px;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+}
 .barangay-list, .forecast-list {
     flex: 1 1 0;
     min-width: 300px;
-    max-width: 400px;
+    max-width: 550px;
     height: 600px;
     overflow-y: auto;
     display: flex;
@@ -251,8 +287,8 @@ thead th {
 }
 #barangay-map2, #forecast-map {
     flex: 1 1 0;
-    min-width: 250px;
-    max-width: 400px;
+    min-width: 400px;
+    max-width: 550px;
     min-height: 600px;
     border-radius: 10px;
     border: 2px solid #ccc;
@@ -268,43 +304,65 @@ thead th {
     align-items: center;
     box-sizing: border-box;
 }
-#barangay-search {
+.search-container, .week-dropdown { 
+    position: relative;
     border: 1px solid #ccc;
     border-radius: 8px;
-    width: 100%;
     margin: 5px;
-    padding: 12px;
+    width: 100%;
+    gap: 5px;
+}
+.search-input, #forecast-week-select {
+    width: 100%;
+    padding: 12px 80px 12px 12px;
     font-size: 16px;
     box-sizing: border-box;
+    border: none;
+    border-radius: 8px;
+}
+.search-button {
+    color: #1e3c72;
+    position: absolute;
+    right: 5px;
+    top: 50%;
+    transform: translateY(-50%);
+    border: none;
+    background: transparent;
+    cursor: pointer;
 }
 #barangay-details {
     margin-top: 20px;
     border-radius: 10px;
+}
+.barangay-text { color: #888888; }
+.barangay-citywide-wrapper {
+    display: none;
+    flex-direction: column;
+}
+.forecast-card {
+    min-height: 250px;
+    max-height: 400px;
+    min-width: 400px;
+    max-width: 550px;
+    display: flex;
+    flex-direction: column;
+    margin: 20px;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
 }
 .forecast-controls {
     display: flex;
     align-items: center;
     margin-bottom: 10px;
     gap: 10px;
+    justify-content: space-between;
 }
 #forecast-week-select {
     font-family: 'Poppins', sans-serif;
     padding: 5px 10px;
     border-radius: 5px;
     border: 1px solid #ccc;
-}
-.forecast-card {
-    min-height: 250px;
-    max-height: 400px;
-    min-width: 300px;
-    max-width: 400px;
-    display: flex;
-    flex-direction: column;
-    flex: 1 1 0;
-    margin: 20px;
-    align-items: center;
-    justify-content: center;
-    box-sizing: border-box;
 }
 
 /* Prevention */
@@ -449,19 +507,22 @@ thead th {
         padding: 40px 10px;
         text-align: center;
     }
+    .forecast-controls {
+        flex-direction: column;
+    }
     #barangay-map2, #forecast-map {
         min-width: 200px;
         min-height: 200px;
     }
-    .forecast-card, .barangay-card {
-        min-width: 100px;
+    .forecast-card, .barangay-card, .citywide-card {
+        min-width: 150px;
         max-width: 400px;
     }
     .forecast-card {
         margin: 0;
     }
     .barangay-list, .forecast-list {
-        min-width: 100px;
+        min-width: 150px;
         height: 200px;
     }
     .section-title, #forecast-barangay, #barangay-search,
@@ -566,6 +627,33 @@ thead th {
     height: 30px;
     animation: spin 1s linear infinite;
 }
+#load {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1105;
+}
+.loading-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: #fff;
+    margin: 15% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+    max-width: 400px;
+    border-radius: 10px;
+    position: relative;
+}
+#load h2 {color: #1e3c72;}
+#load p {color: #2c3e50;}
 @keyframes spin {
     0% {
         transform: rotate(0deg);

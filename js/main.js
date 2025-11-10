@@ -433,8 +433,10 @@ async function getMapDataAndDisplay() {
     }
 }
 
+// =========Barangay Section=========
 async function loadBarangayData() {
     try {
+        // Latest date on records
         const { data: latestData, error: latestError } = await supabaseClient
             .from('rate_and_classification')
             .select('Year, Month, Week')
@@ -443,13 +445,13 @@ async function loadBarangayData() {
             .limit(1);
 
         if (latestError) throw latestError;
-
         if (latestData.length === 0) return;
+
         const latest = latestData[0];
-        
         document.getElementById('barangay-heading').textContent =
             `San Pablo City as of ${latest.Month} ${latest.Year}, Week ${latest.Week}`;
         
+        // Table for barangay latest details
         const { data: rateData, error: rateError } = await supabaseClient
             .from('rate_and_classification')
             .select('Barangay, attack_rate, risk_classification')
@@ -468,129 +470,134 @@ async function loadBarangayData() {
         });
 
         listContainer.innerHTML = `
-        <table style="width: 100%; border-collapse: collapse; text-align: left;">
-            <thead><th>Barangay</td><th>Attack Rate</td><th>Risk Level</td></thead>
-            <tbody>
-            ${rateData.map(b => {
-                let color = '';
-                if (b.risk_classification === 'Low Risk') color = '#2ECC71';
-                else if (b.risk_classification === 'Moderate Risk') color = '#FFD700';
-                else if (b.risk_classification === 'High Risk') color = '#FF6347';
-
-                return `
-                <tr>
-                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">${b.Barangay}</td>
-                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">${b.attack_rate.toFixed(2)}</td>
-                    <td style="padding: 8px; border-bottom: 1px solid #ddd; color: ${color};">
-                    ${b.risk_classification}
-                    </td>
-                </tr>
-                `;
-            }).join('')}
-            </tbody>
-        </table>
+            <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                <thead>
+                    <th>Barangay</th>
+                    <th>Attack Rate</th>
+                    <th>Risk Level</th>
+                </thead>
+                <tbody>
+                    ${rateData.map(b => {
+                        let color = '';
+                        if (b.risk_classification === 'Low Risk') color = '#2ECC71';
+                        else if (b.risk_classification === 'Moderate Risk') color = '#FFD700';
+                        else if (b.risk_classification === 'High Risk') color = '#FF6347';
+                        return `
+                        <tr>
+                            <td style="padding: 8px; border-bottom: 1px solid #ddd;">${b.Barangay}</td>
+                            <td style="padding: 8px; border-bottom: 1px solid #ddd;">${b.attack_rate.toFixed(2)}</td>
+                            <td style="padding: 8px; border-bottom: 1px solid #ddd; color: ${color};">${b.risk_classification}</td>
+                        </tr>`;
+                    }).join('')}
+                </tbody>
+            </table>
         `;
-
+        
+        // Search barangay details
+        const searchButton = document.getElementById('search-barangay');
         const searchInput = document.getElementById('barangay-search');
-        searchInput.addEventListener('input', async e => {
-            const query = e.target.value.trim().toLowerCase();
+        
+        searchButton.addEventListener('click', async () => {
+            const query = searchInput.value.trim().toLowerCase();
             if (!query) {
-                document.getElementById('barangay-details').innerHTML = '';
+                document.getElementById('barangay-details').innerHTML = `
+                    <p>Please enter a barangay name.</p>
+                `;
                 return;
             }
 
-            const { data: detailData, error: detailError } = await supabaseClient
-                .from('records')
-                .select('Barangay, Gender, Age_Group, Cases')
-                .eq('Year', latest.Year)
-                .eq('Week', latest.Week)
-                .ilike('Barangay', `%${query}%`);
+            try {
+                const { data: detailData, error: detailError } = await supabaseClient
+                    .from('records')
+                    .select('Barangay, Gender, Age_Group, Cases')
+                    .eq('Year', latest.Year)
+                    .eq('Week', latest.Week)
+                    .ilike('Barangay', `%${query}%`);
 
-            if (detailError) throw detailError;
+                if (detailError) throw detailError;
+                if (detailData.length === 0) {
+                    document.getElementById('barangay-details').innerHTML = `
+                        <p>No records found for that barangay.</p>
+                    `;
+                    return;
+                }
 
-            if (detailData.length === 0) {
-                document.getElementById('barangay-details').innerHTML =
-                    '<p>No records found for that barangay.</p>';
-                return;
-            }
-
-            const barangay = detailData[0].Barangay.toUpperCase();
-            const totalMale = detailData
-                .filter(d => d.Gender === 'Male')
-                .reduce((a, b) => a + b.Cases, 0);
-            const totalFemale = detailData
-                .filter(d => d.Gender === 'Female')
-                .reduce((a, b) => a + b.Cases, 0);
-
-            const ageGroups = {};
-            detailData.forEach(d => {
-                ageGroups[d.Age_Group] = (ageGroups[d.Age_Group] || 0) + d.Cases;
-            });
-
-            document.getElementById('barangay-details').innerHTML = `
-                <h3>${barangay}</h3><div style="text-align: center;">
-                <table style="margin: auto; border-collapse: collapse;">
-                    <thead>
-                        <tr>
-                            <th style="border-bottom: 2px solid #ddd; padding: 6px;">Gender</th>
-                            <th style="border-bottom: 2px solid #ddd; padding: 6px;">Total</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td style="padding: 6px;">Male</td>
-                            <td style="padding: 6px;">${totalMale}</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 6px;">Female</td>
-                            <td style="padding: 6px;">${totalFemale}</td>
-                        </tr>
-                    </tbody>
-                </table>
+                const barangay = detailData[0].Barangay.toUpperCase();
                 
-                <table style="margin: auto; border-collapse: collapse;">
-                    <thead>
-                        <tr>
-                            <th style="border-bottom: 2px solid #ddd; padding: 6px;">Age Group</th>
-                            <th style="border-bottom: 2px solid #ddd; padding: 6px;">Total</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${Object.entries(ageGroups)
-                            .map(([age, total]) => `
-                            <tr>
-                                <td style="padding: 6px;">${age}</td>
-                                <td style="padding: 6px;">${total}</td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            </div>
-            `;
+                const totalMale = detailData
+                    .filter(d => d.Gender === 'Male')
+                    .reduce((a, b) => a + b.Cases, 0);
+                const totalFemale = detailData
+                    .filter(d => d.Gender === 'Female')
+                    .reduce((a, b) => a + b.Cases, 0);
+
+                const ageGroups = {};
+                detailData.forEach(d => {
+                    ageGroups[d.Age_Group] = (ageGroups[d.Age_Group] || 0) + d.Cases;
+                });
+
+                document.getElementById('barangay-details').innerHTML = `
+                    <h3>${barangay}</h3>
+                    <div style="text-align: center;">
+                        <table style="margin: auto; border-collapse: collapse;">
+                            <thead>
+                                <tr>
+                                    <th style="border-bottom: 2px solid #ddd; padding: 6px;">Gender</th>
+                                    <th style="border-bottom: 2px solid #ddd; padding: 6px;">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td style="padding: 6px;">Male</td>
+                                    <td style="padding: 6px;">${totalMale}</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 6px;">Female</td>
+                                    <td style="padding: 6px;">${totalFemale}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        
+                        <table style="margin: auto; border-collapse: collapse;">
+                            <thead>
+                                <tr>
+                                    <th style="border-bottom: 2px solid #ddd; padding: 6px;">Age Group</th>
+                                    <th style="border-bottom: 2px solid #ddd; padding: 6px;">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${Object.entries(ageGroups)
+                                    .map(([age, total]) => `
+                                    <tr>
+                                        <td style="padding: 6px;">${age}</td>
+                                        <td style="padding: 6px;">${total}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            } catch (err) {
+                console.error('Error fetching barangay details:', err);
+            }
         });
     } catch (err) {
         console.error('Error loading barangay data:', err);
     }
 }
 
-async function getForecastDataAndDisplay() {
+// =========Forecast Section=========
+let forecastMap, barangayChart, cityChart;
+const loadModal = document.getElementById('load');
+async function displayForecast(barangayForecastData, citywideForecastData) {
     try {
-        const { data, error } = await supabaseClient
-            .from("forecast_results")
-            .select("Barangay, week_range, predicted_risk")
-            .order("week_range", { ascending: true })
-            .order("Barangay", { ascending: true });
-
-        if (error) throw error;
-        if (!data.length) {
-            console.warn("No forecast data found.");
-            return;
-        }
-
-        const forecastData = data;
-        const uniqueDates = [...new Set(forecastData.map(item => item.week_range))];
+        const uniqueDates = [...new Set(barangayForecastData.map(item => item.week_range))];
         const weekSelect = document.getElementById("forecast-week-select");
-        let forecastMap, barangayLayer, chart;
+        let barangayLayer;
+
+        if (forecastMap) {
+            forecastMap.remove();
+        }
 
         // Populate week dropdown
         weekSelect.innerHTML = uniqueDates
@@ -599,7 +606,8 @@ async function getForecastDataAndDisplay() {
 
         forecastMap = L.map("forecast-map").setView([14.05, 121.33], 11);
         L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-            attribution: "&copy; OpenStreetMap contributors"}).addTo(forecastMap);
+            attribution: "&copy; OpenStreetMap contributors"
+        }).addTo(forecastMap);
 
         const legend = L.control({ position: "bottomright" });
         legend.onAdd = function () {
@@ -626,9 +634,14 @@ async function getForecastDataAndDisplay() {
         };
         legend.addTo(forecastMap);
 
-        // Chart
-        const ctx = document.getElementById("forecast-chart").getContext("2d");
-        chart = new Chart(ctx, {
+        // Barangay Chart
+        const ctxBarangay = document.getElementById("forecast-chart").getContext("2d");
+            
+        if (barangayChart) {
+            barangayChart.destroy();
+        }
+
+        barangayChart = new Chart(ctxBarangay, {
             type: "line",
             data: {
                 labels:[],
@@ -639,6 +652,15 @@ async function getForecastDataAndDisplay() {
                 plugins: { 
                     legend: {
                         display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const scoreToRisk = { 1: "Low Risk", 2: "Moderate Risk", 3: "High Risk" };
+                                const value = context.parsed.y;
+                                return `${scoreToRisk[value] || "No Data"}`;
+                            }
+                        }
                     }
                 },
                 scales: {
@@ -663,22 +685,74 @@ async function getForecastDataAndDisplay() {
             }
         });
 
-        function getColorForRiskClassification(risk) {
-            if (!risk) return "#808080";
-            switch (risk.toLowerCase()) {
-                case "low risk": return "#2ECC71";
-                case "moderate risk": return "#FFD700";
-                case "high risk": return "#FF6347";
-                default: return "#808080";
-            }
+        // Citywide Chart
+        const ctxCity = document.getElementById("citywide-chart").getContext("2d");
+        const riskToScore = { "Low Risk": 1, "Moderate Risk": 2, "High Risk": 3 };
+        
+        if (cityChart) {
+            cityChart.destroy();
         }
+
+        const cityLabels = citywideForecastData.map(d => d.week_range);
+        const cityRiskScores = citywideForecastData.map(d => riskToScore[d.predicted_risk] || 0);
+
+        cityChart = new Chart(ctxCity, {
+            type: "line",
+            data: {
+                labels: cityLabels,
+                datasets: [{
+                    data: cityRiskScores,
+                    borderColor: "#1e3c72",
+                    fill: false,
+                    pointBackgroundColor: citywideForecastData.map(d =>
+                        getColorForRiskClassification(d.predicted_risk)
+                    )
+                }]
+            },
+            options: {
+                responsiveness: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const scoreToRisk = { 1: "Low Risk", 2: "Moderate Risk", 3: "High Risk" };
+                                const value = context.parsed.y;
+                                return `${scoreToRisk[value] || "No Data"}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            display: false
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        min: 0,
+                        max: 4,
+                        ticks: {
+                            stepSize: 1,
+                            callback: v => ({ 1: "Low", 2: "Moderate", 3: "High" }[v] || "")
+                        }
+                    }
+                }
+            }
+        });
 
         const geoResponse = await fetch("assets/SAN_PABLO_MAP.geojson");
         const geojsonData = await geoResponse.json();
 
         async function updateForecastMap(weekNumber) {
             const selectedDate = uniqueDates[weekNumber - 1];
-            const weekData = forecastData.filter(item => item.week_range === selectedDate);
+            const weekData = barangayForecastData.filter(item => item.week_range === selectedDate);
 
             geojsonData.features.forEach(feature => {
                 const barangayName = feature.properties.name;
@@ -711,10 +785,10 @@ async function getForecastDataAndDisplay() {
             }).addTo(forecastMap);
         }
 
-        // Table
+        // Barangay Table
         function updateForecastTable(weekNumber) {
             const selectedDate = uniqueDates[weekNumber - 1];
-            const weekData = forecastData.filter(item => item.week_range === selectedDate);
+            const weekData = barangayForecastData.filter(item => item.week_range === selectedDate);
             
             const riskOrder = { "High Risk": 1, "Moderate Risk": 2, "Low Risk": 3 };
             const sortedWeekData = weekData.sort( (a, b) => riskOrder[a.predicted_risk] - riskOrder[b.predicted_risk] );
@@ -739,9 +813,9 @@ async function getForecastDataAndDisplay() {
             `;
         }
         
-        // Chart
+        // Barangay Chart - Updating
         function updateChart(barangayName) {
-            const barangayData = forecastData.filter(item => item.Barangay === barangayName);
+            const barangayData = barangayForecastData.filter(item => item.Barangay === barangayName);
             const labels = barangayData.map(d => d.week_range);
             
             const riskToScore = { "Low Risk": 1, "Moderate Risk": 2, "High Risk": 3 };
@@ -749,15 +823,14 @@ async function getForecastDataAndDisplay() {
 
             document.getElementById("forecast-barangay").textContent = "10-Week Risk Forecast in " + barangayName;
 
-            chart.data.labels = labels;
-            chart.data.datasets = [{
-                label: `Forecasted Risk Level`,
+            barangayChart.data.labels = labels;
+            barangayChart.data.datasets = [{
                 data: riskScores,
                 borderColor: "#1e3c72",
                 fill: false,
                 pointBackgroundColor: barangayData.map(d => getColorForRiskClassification(d.predicted_risk))
             }];
-            chart.update();
+            barangayChart.update();
         }
 
         weekSelect.addEventListener("change", e => {
@@ -767,8 +840,32 @@ async function getForecastDataAndDisplay() {
         });
 
         // Initial load
-        await updateForecastMap(1);
-        updateForecastTable(1);
+        document.querySelectorAll(".placeholder-text").forEach(el => el.style.display = "none");
+        document.querySelector(".week-dropdown").style.display = "block";
+        document.querySelector(".barangay-citywide-wrapper").style.display = "flex";
+        loadModal.style.display = "none";
+        if (forecastMap) {
+            forecastMap.invalidateSize();
+            await updateForecastMap(1);
+            updateForecastTable(1);
+        };
+
+        // Citywide Table
+        const cityTableContainer = document.getElementById("citywide-table");
+        cityTableContainer.innerHTML = `
+        <table style="width:100%; border-collapse:collapse; text-align:left;">
+            <thead><th>Week Range</th><th>Predicted Risk</th></thead>
+            <tbody>
+                ${citywideForecastData.map(row => `
+                    <tr>
+                        <td style="padding:8px; border-bottom:1px solid #ddd;">${row.week_range}</td>
+                        <td style="padding:8px; border-bottom:1px solid #ddd; color:${getColorForRiskClassification(row.predicted_risk)};">
+                            ${row.predicted_risk}
+                        </td>
+                    </tr>
+                `).join("")}
+            </tbody>
+        </table>`;
     } catch (err) {
         console.error("Error displaying forecast:", err);
     }
@@ -788,6 +885,7 @@ function getColorForRiskClassification(riskClassification) {
     }
 }
 
+// =========Editable Contents=========
 async function loadContent() {
     const { data, error } = await supabaseClient.from('site_content').select('*');
     if (error) {
@@ -869,8 +967,8 @@ async function loadContactDetails() {
     });
 }
 
+// =========Nearby Hospital=========
 let map;
-
 function initMap(lat, lon) {
     const sanPabloLat = 14.0685;
     const sanPabloLon = 121.3259;
@@ -965,18 +1063,17 @@ function showInitialMessage() {
         </tr>
     `;
 }
-initMap();
-showInitialMessage();
 
 document.addEventListener('DOMContentLoaded', () => {
     fetchData();
     getMapDataAndDisplay();
-    getForecastDataAndDisplay();
     loadBarangayData();
     loadContent();
     loadPreventionContent();
     loadPublicReferences();
     loadContactDetails();
+    initMap();
+    showInitialMessage();
     
     const sidebar = document.querySelector('.sidebar');
     const hamburgerBtn = document.querySelector('.hamburger-btn');
@@ -985,6 +1082,39 @@ document.addEventListener('DOMContentLoaded', () => {
     const contentSections = document.querySelectorAll('.content-section');
     const overlay = document.getElementById('modal-overlay');
     const infoModal = document.getElementById('info-modal');
+
+    document.getElementById("generate-forecast").addEventListener("click", async () => {
+        const weeksInput = document.getElementById("weeks-input");
+        const weeks = parseInt(weeksInput.value, 10);
+        const spinnerText = document.getElementById('spinner-text');
+        const loadSpin = document.getElementById('loadSpin');
+
+        loadModal.style.display = "flex";
+
+        if (isNaN(weeks) || weeks < 1) {
+            loadSpin.style.display = "none"
+            spinnerText.innerHTML = "Please enter a valid number of weeks (1 or more).";
+            setTimeout(() => {
+                loadSpin.style.display = "block"
+                loadModal.style.display = "none";
+            }, 3000);
+            return;
+        }
+
+        spinnerText.innerHTML = `Generating ${weeks}-Week Forecast`;
+        
+        const barangayResponse = await fetch(`/forecast?mode=barangay&weeks=${weeks}`);
+        const barangayResult = await barangayResponse.json();
+
+        const cityResponse = await fetch(`/forecast?mode=citywide&weeks=${weeks}`);
+        const cityResult = await cityResponse.json();
+
+        if (barangayResult.success && barangayResult.data) {
+            displayForecast(barangayResult.data, cityResult.data && cityResult.success && cityResult.data);
+        } else {
+            console.error("Forecast failed:", barangayResult.error, cityResult.error);
+        }
+    });
 
     // Sidebar Navigation
     if (sidebar && hamburgerBtn) {
