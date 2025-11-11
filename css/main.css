@@ -476,12 +476,14 @@ thead th {
 }
 #contact h3 { margin-top: 30px;color: #27ae60; }
 .contact-block a { color: #2980b9; text-decoration: underline; }
-.hospitals { width: 100%; overflow-x: auto; }
+.hospitals {
+    width: 100%;
+    overflow-x: auto;
+    margin: 0 auto 18px auto;}
 .hospital-table {
     width: 100%;
     border-collapse: separate;
     border-spacing: 0;
-    margin: 0 auto 18px auto;
     background: #ffffff;
     border-radius: 10px;
     font-size: small;
@@ -519,8 +521,8 @@ thead th {
     }
 }
 @media (max-width: 650px) {
-    #forecast, #barangay {
-        padding: 40px 10px;
+    #forecast, #barangay, #contact, #prevention {
+        padding: 20px 10px;
         text-align: center;
     }
     #forecast-description h3 { font-size: small; }
@@ -546,14 +548,14 @@ thead th {
     #barangay-details h3, #barangay-details th, #barangay-details td, .message h1  {
         font-size: large;
     }
-    .message p {
+    .message p, .prevention-content-title, .prevention-content-text {
         font-size: small;
     }
+    .sources-section h4, #reference-list li { font-size: smaller; }
     .dashboard-card {
         padding: 10px;
     }
     .hospitals {
-        height: 300px;
         overflow: auto;
         margin-bottom: 10px;
     }
