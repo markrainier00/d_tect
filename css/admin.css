@@ -148,7 +148,7 @@ header h5 {
 #contact-content{
     margin-bottom: 150px;
 }
-.prevention-table, .references-table, .contacts-table {
+.prevention-table, .video-table, .contacts-table {
     width: 100%;
     border-collapse: collapse;
     border-radius: 10px;
@@ -157,7 +157,7 @@ header h5 {
     table-layout: auto;
     box-shadow: 0 2px 5px rgba(0,0,0,0.3);
 }
-.prevention-table td, .references-table td, .contacts-table td {
+.prevention-table td, .video-table td, .contacts-table td {
     vertical-align: top;
     padding: 12px 10px;
     border: 1px solid #e0e0e0;
@@ -219,7 +219,7 @@ header h5 {
 }
 #forgot-form, #status-modal-content, .add-button { text-align: center; }
 .modal-content h2 { color: #1e3c72; }
-#addPrevention textarea, #addReference input, #addContact input {
+#addPrevention textarea, #addVideo input, #addContact input {
   width: 100%;
   min-height: 40px;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -240,7 +240,7 @@ header h5 {
     gap: 5px;
 }
 .status-ok-btn, .status-cancel-btn, .reset-btn,
-#addPrevention button, #addReference button, #addContact button {
+#addPrevention button, #addVideo button, #addContact button {
     padding: 8px;
     border: none;
     border-radius: 5px;
@@ -249,5 +249,5 @@ header h5 {
     margin-top: 20px;
     transition: all 0.3s ease-in;
 }
-.reset-btn, #addPrevention button, #addReference button, #addContact button { background-color: #e1f2e0 ; color: #178244; transition: all 0.3s ease-in; }
-.reset-btn:hover, #addPrevention button:hover, #addReference button:hover, #addContact button:hover { background-color: #d3e8d3; }
+.reset-btn, #addPrevention button, #addVideo button, #addContact button { background-color: #e1f2e0 ; color: #178244; transition: all 0.3s ease-in; }
+.reset-btn:hover, #addPrevention button:hover, #addVideo button:hover, #addContact button:hover { background-color: #d3e8d3; }

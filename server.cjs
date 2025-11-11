@@ -690,11 +690,11 @@ app.get("/api/fetchContent", async (req, res) => {
       .order('id', { ascending: true });
     if (preventionHeaderError) throw preventionHeaderError;
 
-    const { data: referencesData, error: referencesError } = await supabaseClient
-      .from('references')
+    const { data: videoData, error: videoError } = await supabaseClient
+      .from('videos')
       .select('*')
       .order('id', { ascending: true });
-    if (referencesError) throw referencesError;
+    if (videoError) throw videoError;
 
     const { data: contactData, error: contactError } = await supabaseClient
       .from('contact_details')
@@ -705,7 +705,7 @@ app.get("/api/fetchContent", async (req, res) => {
     res.json({
       preventionContentData,
       preventionHeaderData,
-      referencesData,
+      videoData,
       contactData
     });
   } catch (err) {
@@ -779,27 +779,6 @@ app.post('/api/addPrevention', async (req, res) => {
   }
 });
 
-app.post('/api/addReference', async (req, res) => {
-    const { title, href } = req.body;
-
-    if (!title || !href) {
-        return res.status(400).json({ error: 'Both title and link are required.' });
-    }
-
-    try {
-        const { error } = await supabaseClient
-            .from('references')
-            .insert([{ title, href }]);
-
-        if (error) throw error;
-
-        res.json({ success: true });
-    } catch (err) {
-        console.error("Insert error:", err.message);
-        res.status(500).json({ error: err.message });
-    }
-});
-
 app.post('/api/addContact', async (req, res) => {
   const { office_name, address, phone, email, facebook_url } = req.body;
 
@@ -817,6 +796,27 @@ app.post('/api/addContact', async (req, res) => {
     res.json({ success: true });
   } catch (err) {
     console.error("Insert error:", err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/addVideo', async (req, res) => {
+  const { title, video_id } = req.body;
+
+  if (!title || !video_id) {
+    return res.status(400).json({ success: false, message: 'Video title and link are required.' });
+  }
+
+  try {
+  const { error } = await supabaseClient
+    .from('videos')
+    .insert([{ title, video_id }])
+    
+    if (error) throw error;
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Insert error:', err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -1015,6 +1015,17 @@ app.get("/api/hospitals", async (req, res) => {
     console.error("Error fetching hospitals:", err);
     res.status(500).json({ error: err.message });
   }
+});
+
+app.get('/api/videos', async (req, res) => {
+  const { data, error } = await supabaseClient
+    .from('videos')    
+    .select('id, title, video_id')
+    .order('id', { ascending: true });
+
+  if (error) return res.status(500).send(error.message);
+
+  res.json(data);
 });
 
 async function runPython(script) {

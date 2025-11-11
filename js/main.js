@@ -925,21 +925,6 @@ async function loadPreventionContent() {
     });
 }
 
-async function loadPublicReferences() {
-    const { data, error } = await supabaseClient
-        .from('references')
-        .select('*')
-        .order('created_at', { ascending: true });
-
-    const list = document.getElementById('reference-list');
-    list.innerHTML = '';
-    data.forEach(ref => {
-        const li = document.createElement('li');
-        li.innerHTML = `<a href="${ref.href}" target="_blank">${ref.title}</a>`;
-        list.appendChild(li);
-    });
-}
-
 async function loadContactDetails() {
     const container = document.getElementById('contact-details-row');
     if (!container) return;
@@ -1065,16 +1050,31 @@ function showInitialMessage() {
     `;
 }
 
+async function loadVideos() {
+  const response = await fetch('/api/videos');
+  const videos = await response.json();
+
+  const container = document.getElementById('video-slides-row');
+
+  videos.forEach(video => {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'video-container';
+    wrapper.innerHTML = `
+        <iframe src="https://www.youtube.com/embed/${video.video_id}?si=eWHSUUX7NLI0x6Pf" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>`;
+    container.appendChild(wrapper);
+  });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     fetchData();
     getMapDataAndDisplay();
     loadBarangayData();
     loadContent();
     loadPreventionContent();
-    loadPublicReferences();
     loadContactDetails();
     initMap();
     showInitialMessage();
+    loadVideos();
     
     const sidebar = document.querySelector('.sidebar');
     const hamburgerBtn = document.querySelector('.hamburger-btn');

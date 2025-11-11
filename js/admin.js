@@ -1,7 +1,7 @@
 const preventionHeader = document.querySelector('#preventionheaderTable tbody');
 const preventionContent = document.querySelector('#preventionTable tbody');
+const videoTable = document.querySelector('#videoTable tbody');
 const contactsTable = document.querySelector('#contactsTable tbody');
-const referencesTable = document.querySelector('#referencesTable tbody');
 const statusModal = document.getElementById("status-modal");
 const statusTitle = document.getElementById('status-title');
 const statusContent = document.getElementById('status-content');
@@ -115,11 +115,11 @@ async function fetchContent() {
             </tr>
         `).join('');
 
-        // References
-        referencesTable.innerHTML = result.referencesData.map(item => `
-            <tr data-id="${item.id}" data-table="references">
-                <td><textarea class="titleref-input">${item.title}</textarea></td>
-                <td><textarea class="href-input">${item.href}</textarea></td>
+        // Videos
+        videoTable.innerHTML = result.videoData.map(item => `
+            <tr data-id="${item.id}" data-table="videos">
+                <td><textarea class="titlevideo-input">${item.title}</textarea></td>
+                <td><textarea class="videolink-input">${item.video_id}</textarea></td>
                 <td>
                     <button class="update-btn">Update</button>
                     <button class="delete-btn">Delete</button>
@@ -148,7 +148,6 @@ async function fetchContent() {
         console.error("Error loading content:", err);
         preventionContent.innerHTML = `<tr><td colspan="3">Error loading data</td></tr>`;
         preventionHeader.innerHTML = `<tr><td colspan="3">Error loading data</td></tr>`;
-        referencesTable.innerHTML = `<tr><td colspan="3">Error loading data</td></tr>`;
         contactsTable.innerHTML = `<tr><td colspan="3">Error loading data</td></tr>`;
     }
 }
@@ -184,10 +183,10 @@ function attachRowEventListeners() {
                     title: row.querySelector('.title-input').value,
                     content: row.querySelector('.content-input').value
                 };
-            } else if (table === 'references') {
+            } else if (table === 'videos') {
                 updateData = {
-                    title: row.querySelector('.titleref-input').value,
-                    href: row.querySelector('.href-input').value
+                    title: row.querySelector('.titlevideo-input').value,
+                    video_id: row.querySelector('.videolink-input').value
                 };
             } else if (table === 'contact_details') {
                 updateData = {
@@ -264,12 +263,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const addPrevConBtn = document.getElementById('add-prevention-content');
     const addPrevention = document.getElementById('addPrevention');
     const addPreventionForm = document.getElementById('addPreventionForm');
+    const addVideoBtn = document.getElementById('add-video');
+    const addVideo = document.getElementById('addVideo');
+    const addVideoForm = document.getElementById('addVideoForm');
     const addContactBtn = document.getElementById('add-contact');
     const addContact = document.getElementById('addContact');
     const addContactForm = document.getElementById('addContactForm');
-    const addReferenceBtn = document.getElementById('add-references');
-    const addReference = document.getElementById('addReference');
-    const addReferenceForm = document.getElementById('addReferenceForm');
 
     // Open Modals
     if (resetBtn && forgotPassword) {
@@ -283,9 +282,9 @@ document.addEventListener('DOMContentLoaded', () => {
             addPrevention.style.display = 'flex';
         });
     }
-    if (addReferenceBtn) {
-        addReferenceBtn.addEventListener('click', () => {
-            addReference.style.display = 'flex';
+    if (addVideoBtn) {
+        addVideoBtn.addEventListener('click', () => {
+            addVideo.style.display = 'flex';
         });
     }
     if (addContactBtn) {
@@ -296,13 +295,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // To Close Modals
     window.addEventListener('click', (e) => {
-        if (e.target === forgotPassword || e.target === addPrevention || e.target === addReference || e.target === addContact) {
+        if (e.target === forgotPassword || e.target === addPrevention || e.target === addContact) {
             if (forgotPassword) forgotPassword.style.display = 'none';
             if (forgotForm) forgotForm.reset(); 
             if (addPrevention) addPrevention.style.display = 'none';
             if (addPreventionForm) addPreventionForm.reset();
-            if (addReference) addReference.style.display = 'none';
-            if (addReferenceForm) addReferenceForm.reset();
             if (addContact) addContact.style.display = 'none';
             if (addContactForm) addContactForm.reset();
         }
@@ -388,30 +385,30 @@ document.addEventListener('DOMContentLoaded', () => {
             showStatus("Insert Failed", err.message, { showButton: true });
         }
     });
-
-    // Add source
-    addReferenceForm.addEventListener('submit', async (e) => {
+    
+    // Add video
+    addVideoForm.addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        const title = document.getElementById('newrefTitle').value.trim();
-        const href = document.getElementById('newLink').value.trim();
+        const title = document.getElementById('newVideoTitle').value.trim();
+        const video_id = document.getElementById('newVideoLink').value.trim();
 
         try {
-            const res = await fetch('/api/addReference', {
+            const res = await fetch('/api/addVideo', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ title, href })
+                body: JSON.stringify({ title, video_id })
             });
 
             const result = await res.json();
             if (!res.ok) throw new Error(result.error || "Insert failed");
 
-            showStatus("Reference Added", "New reference added successfully!", {
+            showStatus("Video Added", "New video link added successfully!", {
                 showButton: true,
                 callback: () => {
-                    fetchContent();
-                    addReference.style.display = 'none';
-                    addReferenceForm.reset();
+                    fetchContent(); 
+                    addVideo.style.display = 'none';
+                    addVideoForm.reset();
                 }
             });
         } catch (err) {
