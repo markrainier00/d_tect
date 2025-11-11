@@ -339,6 +339,19 @@ thead th {
     display: none;
     flex-direction: column;
 }
+#forecast-description {
+    display: flex;
+    max-width: 500px;
+    min-width: 200px;
+    text-align: center;
+    align-self: center;
+    justify-self: center;
+    padding: 12px;
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+}
+#forecast-description h3 { font-weight: 100; font-size: medium; }
 .forecast-card {
     min-height: 250px;
     max-height: 400px;

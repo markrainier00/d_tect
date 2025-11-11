@@ -844,6 +844,7 @@ async function displayForecast(barangayForecastData, citywideForecastData) {
         document.querySelector(".week-dropdown").style.display = "block";
         document.querySelector(".barangay-citywide-wrapper").style.display = "flex";
         loadModal.style.display = "none";
+        document.getElementById("forecast-description").style.display = "none";
         if (forecastMap) {
             forecastMap.invalidateSize();
             await updateForecastMap(1);

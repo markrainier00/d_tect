@@ -100,6 +100,18 @@
                         <button class="search-button" id="generate-forecast">Generate</button>
                     </div>
                 </div>
+                <div id="forecast-description">
+                    <h3><strong style="color: #1e3c72;">D-TECT</strong> uses historical dengue incidence data together with environmental and climatic variables such as 
+                        rainfall, temperature, humidity, wind spreed, and wind direction to predict potential risk in the coming weeks.<br> 
+                        <br>By analyzing past patterns and trends, the model estimates the level of dengue risk (classified as Low, Moderate, or High)
+                        for both barangay-level and citywide forecasts.<br>
+                        <br>The system applies time-series and machine learning techniques to identify correlations
+                        between climate conditions and dengue transmission,
+                        providing insights for early warning and preventive planning.<br>
+                        <br><strong style="color: #d9534f;">Note:</strong> This system provides predictions based on historical data and observed trends,
+                        and the results should be interpreted as estimates rather than exact outcomes.
+                    </h3>
+                </div>
                 <div class="barangay-citywide-wrapper">
                     <div class="citywide-container">
                         <div class="citywide-section">
@@ -115,8 +127,7 @@
                             <div class="week-dropdown">
                                 <select id="forecast-week-select"></select>
                             </div>
-                        </div>
-                        <div class="barangay-forecast">
+                        </div><div class="barangay-forecast">
                             <div class="forecast-map-container">
                                 <div id="forecast-list" class="forecast-list">
                                     <p class="placeholder-text">Forecast table will appear here.</p>
