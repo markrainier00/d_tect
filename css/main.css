@@ -425,12 +425,15 @@ thead th {
     justify-content: flex-start;
     margin-bottom: 100px;
 }
-.contact-details {
+.contact-wrapper {
     background:linear-gradient(90deg, #1e3c72, #577cbd);
     border-radius: 12px;
     box-shadow: 0 2px 10px rgba(241, 196, 15, 0.08);
-    padding: 28px 24px 20px 24px;
     color: #ffffff;
+    padding: 28px 24px 0 24px;
+}
+.contact-details {
+    padding-bottom: 20px;    
     overflow-x: auto;
     white-space: nowrap;
 }
