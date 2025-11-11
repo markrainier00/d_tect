@@ -523,6 +523,7 @@ thead th {
         padding: 40px 10px;
         text-align: center;
     }
+    #forecast-description h3 { font-size: small; }
     .forecast-controls {
         flex-direction: column;
     }
