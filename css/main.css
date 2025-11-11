@@ -555,6 +555,7 @@ thead th {
     .dashboard-card {
         padding: 10px;
     }
+    .contact-wrapper { margin: 5px; text-align: left;}
     .hospitals {
         overflow: auto;
         margin-bottom: 10px;
