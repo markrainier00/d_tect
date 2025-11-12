@@ -369,8 +369,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const container = document.getElementById(id);
             const checkboxes = container.querySelectorAll('input[type="checkbox"]');
             if (!Array.from(checkboxes).some(cb => cb.checked)) {
-                spinner.style.display = "none";
-                spinnerText.textContent =`Please select at least one option in ${id.replace("filter", "")} before searching.`;
                 showStatus("Search Data", `Please select at least one option in ${id.replace("filter", "")} before searching.`, {
                     showButton: true
                 });
@@ -519,6 +517,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const downloadModal = document.getElementById("downloadModal");
     const openBtn = document.getElementById("open-download-modal");
     const barangayList = document.getElementById("barangay-wide-list");
+    const barangayTitle = document.getElementById("barangay-wide-list-title");
+    const modeSelect = document.getElementById("forecast-mode-select");
+    const weeksInput = document.getElementById("forecast-weeks-input");
 
     // Open modal
     openBtn.onclick = async () => {
@@ -549,35 +550,76 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    modeSelect.addEventListener("change", () => {
+        if (modeSelect.value === "citywide") {
+            barangayList.style.display = "none";
+            barangayTitle.style.display = "none";
+        } else {
+            barangayList.style.display = "block";
+            barangayTitle.style.display = "block";
+        }
+    });
+
     // Download table
     document.getElementById("download-table").addEventListener("click", async () => {
+        spinnerText.innerText = "Preparing table";
+        loadingModal.style.display = "flex";
+        spinner.style.display = "block";
+        
+        const mode = modeSelect.value;
+        const weeks = parseInt(weeksInput.value, 10);
         const selected = [...document.querySelectorAll(".barangay-checkbox:checked")].map(
             (cb) => cb.value
         );
 
-        if (selected.length === 0) {
+        if (isNaN(weeks) || weeks < 1) {
+            showStatus("Download Failed", "Please enter a valid number of weeks (1 or more).", {
+                showButton: true,
+                buttonText: "Okay"
+            });
+            loadingModal.style.display = "none";
+            spinner.style.display = "none";
+            return;
+        }
+
+        if (mode === "barangay" && selected.length === 0) {
             showStatus("Download Failed", "Please select at least one barangay.", {
                 showButton: true,
                 buttonText: "Okay"
             });
+            loadingModal.style.display = "none";
+            spinner.style.display = "none";
             return;
         }
         
         try {
-            const res = await fetch(`/api/barangay?list=${selected.join(",")}`);
-            const data = await res.json();
+            let data = [];
+            
+            const res = await fetch(`/forecast?mode=${mode}&weeks=${weeks}`);
+            const result = await res.json();
+
+            if (!result.success) throw new Error("Forecast data unavailable.");
+
+            data = result.data;
+
+            if (mode === "barangay") {
+                data = data.filter(d => selected.includes(d.Barangay));
+            }
 
             const csv = [
-                "Barangay,week_range,predicted_risk",
+                "Barangay,Week Range,Predicted Risk",
                 ...data.map(
-                    (row) => `${row.Barangay},"${row.week_range}","${row.predicted_risk}"`
+                    (row) => `${row.Barangay || "San Pablo City"},"${row.week_range}","${row.predicted_risk}"`
                 ),
             ].join("\n");
 
-            downloadCSV(csv, "barangay_forecast.csv");
+            downloadCSV(csv, `${mode}_${weeks}-week_forecast_.csv`);
             showStatus("Download Complete", "CSV file has been downloaded successfully.", { showButton: true });
         } catch (err) {
             showStatus("Download Failed", err.message, { showButton: true });
+        } finally {
+            loadingModal.style.display = "none";
+            spinner.style.display = "none";
         }
     });
 
@@ -593,39 +635,74 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Download chart
     document.getElementById("download-chart").addEventListener("click", async () => {
+        spinnerText.innerText = "Preparing chart";
+        loadingModal.style.display = "flex";
+        spinner.style.display = "block";
+
+        const mode = modeSelect.value;
+        const weeks = parseInt(weeksInput.value, 10);
         const selected = [...document.querySelectorAll(".barangay-checkbox:checked")].map(
             (cb) => cb.value
         );
 
-        if (selected.length === 0) {
+        if (isNaN(weeks) || weeks < 1) {
+            showStatus("Download Failed", "Please enter a valid number of weeks (1 or more).", {
+                showButton: true,
+                buttonText: "Okay"
+            });
+            loadingModal.style.display = "none";
+            spinner.style.display = "none";
+            return;
+        }
+
+        if (mode === "barangay" && selected.length === 0) {
             showStatus("Download Failed", "Please select at least one barangay.", {
                 showButton: true,
                 buttonText: "Okay"
             });
+            loadingModal.style.display = "none";
+            spinner.style.display = "none";
             return;
         }
+        
         try {
-            const res = await fetch(`/api/barangay?list=${selected.join(",")}`);
-            const data = await res.json();
-
             const riskToScore = { "Low Risk": 1, "Moderate Risk": 2, "High Risk": 3 };
 
-            for (const barangay of selected) {
-                const barangayData = data.filter((d) => d.Barangay === barangay);
-                const labels = barangayData.map((d) => d.week_range);
-                const scores = barangayData.map((d) => riskToScore[d.predicted_risk] || 0);
+            const res = await fetch(`/forecast?mode=${mode}&weeks=${weeks}`);
+            const result = await res.json();
+
+            if (!result.success) throw new Error("Forecast data unavailable.");
+            const data = result.data;
+
+            if (mode === "barangay") {
+                for (const barangay of selected) {
+                    const barangayData = data.filter((d) => d.Barangay === barangay);
+                    const labels = barangayData.map((d) => d.week_range);
+                    const scores = barangayData.map((d) => riskToScore[d.predicted_risk] || 0);
+
+                    await downloadChartImageFromData({
+                        labels,
+                        dataPoints: scores,
+                        label: `${barangay} ${weeks}-Week Forecast`,
+                    }, `${barangay}_${weeks}-week_forecast.png`);
+                }
+            } else { // Citywide
+                const labels = data.map((d) => d.week_range);
+                const scores = data.map((d) => riskToScore[d.predicted_risk] || 0);
 
                 await downloadChartImageFromData({
                     labels,
                     dataPoints: scores,
-                    label: `Forecast in ${barangay}`,
-                }, `${barangay}_forecast.png`);
+                    label: `San Pablo City ${weeks}-Week Forecast`,
+                }, `San_Pablo_City_${weeks}-week_forecast.png`);
             }
-            showStatus("Download Complete", "All chart images have been downloaded successfully.", { showButton: true });
+            showStatus("Download Complete", "Chart(s) downloaded successfully.", { showButton: true });
         } catch (err) {
             showStatus("Download Failed", err.message, { showButton: true });
+        } finally {
+            loadingModal.style.display = "none";
+            spinner.style.display = "none";
         }
-        
     });
 
     // Chart download helper
@@ -636,25 +713,25 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.appendChild(tempCanvas);
 
         const ctx = tempCanvas.getContext("2d");
-        ctx.fillStyle = "#fff";
+        ctx.fillStyle = "#ffffff";
         ctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
 
         const chart = new Chart(ctx, {
             type: "line",
             data: {
-            labels,
-            datasets: [{
-                label,
-                data: dataPoints,
-                borderColor: "#1e3c72",
-                fill: false,
-                pointBackgroundColor: dataPoints.map(score => {
-                    if (score === 1) return "#2ECC71";
-                    if (score === 2) return "#FFD700";
-                    if (score === 3) return "#FF6347";
-                    return "#808080";
-                })
-            }],
+                labels,
+                datasets: [{
+                    label,
+                    data: dataPoints,
+                    borderColor: "#1e3c72",
+                    fill: false,
+                    pointBackgroundColor: dataPoints.map(score => {
+                        if (score === 1) return "#2ECC71";
+                        if (score === 2) return "#FFD700";
+                        if (score === 3) return "#FF6347";
+                        return "#808080";
+                    })
+                }],
             },
             options: {
                 responsiveness: false,

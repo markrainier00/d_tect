@@ -137,9 +137,19 @@
 
     <div id="downloadModal" class="modal">
         <div class="modal-content" id="download-modal-content">
-            <h2>Download Options</h2>
+            <h2>Download Forecast Options</h2>
+            <div class="mode-select">
+                <select id="forecast-mode-select">
+                    <option value="barangay">Barangay Forecast</option>
+                    <option value="citywide">Citywide Forecast</option>
+                </select>
+            </div>
+            <div class="weeks-input">
+                <h4>Week/s:</h4>
+                <input type="number" id="forecast-weeks-input" min="1" placeholder="Enter week/s to forecast" />
+            </div>
             <div id="barangay-select-section">
-                <h4>Select Barangays</h4>
+                <h4 id="barangay-wide-list-title">Barangays:</h4>
                 <div class="filters" id="barangay-wide-list"></div>
             </div>
 
