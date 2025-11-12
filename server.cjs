@@ -65,8 +65,7 @@ app.post("/dtect/signup", async (req, res) => {
           first_name,
           last_name,
           role,
-        },
-        redirectTo: 'https://www.dtectsystem.online/account'
+        }
       },
     });
 
@@ -96,20 +95,6 @@ app.post("/dtect/signup", async (req, res) => {
       console.error('Error inserting profile:', insertError);
       return res.status(500).json({ success: false, message: "Failed to create profile." });
     }
-    
-    const { data: linkData, error: linkError } = await supabaseClient.auth.admin.generateLink({
-      type: "signup",
-      email,
-      password,
-      options: {
-        data: { first_name, last_name, role },
-        redirectTo: "https://www.dtectsystem.online/account",
-      },
-    });
-
-    if (linkError) throw linkError;
-
-    const confirmationLink = linkData?.properties?.action_link;
 
     const emailBody = `
       <div style="font-family: 'Segoe UI', Arial, sans-serif; background-color: #f4f6f8; padding: 30px;">
@@ -128,7 +113,7 @@ app.post("/dtect/signup", async (req, res) => {
             <br>Set your new password immediately.</p>
             
             <div style="text-align: center; margin: 30px 0;">
-              <a href="${confirmationLink}" 
+              <a href="https://www.dtectsystem.online/account" 
                 style="display:inline-block; background-color: #1e3c72; color:white; font-weight:bold; padding:12px 25px; text-decoration:none; border-radius:6px;">
                 Confirm Sign Up
               </a>
