@@ -118,13 +118,7 @@ document.getElementById('reset-password-form').addEventListener('submit', async 
         }
 
         const { data, error } = await supabaseClient.auth.updateUser({
-            password: newPassword,
-            data: {
-                name: currentUser.user_metadata.name,
-                first_name: currentUser.user_metadata.first_name,
-                last_name: currentUser.user_metadata.last_name,
-                role: currentUser.user_metadata.role,
-            }
+            password: newPassword
         });
 
         if (error) {

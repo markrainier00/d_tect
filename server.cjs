@@ -1,9 +1,10 @@
 require('dotenv').config();
 const express = require("express");
+const SibApiV3Sdk = require('@getbrevo/brevo');
 const bodyParser = require("body-parser");
 const fetch = require("node-fetch");
 const cron = require("node-cron");
-const supabaseClient = require('./supabaseClient');
+const { supabaseClient, supabaseAnons, brevo } = require('./supabaseClient');
 const { spawn } = require('child_process');
 const path = require("path");
 const cookieParser = require("cookie-parser");
@@ -31,6 +32,7 @@ app.get('/setpassword', (req, res) => {
 });
 
 // Sign up
+const sender = { email: "noreply@dtectsystem.online", name: "D-TECT System" };
 app.post("/dtect/signup", async (req, res) => {
   const password = Array.from({length: 12}, () => 
     Math.random().toString(36)[2]
@@ -51,10 +53,7 @@ app.post("/dtect/signup", async (req, res) => {
     }
 
     if (existingUser) {
-      return res.status(400).json({
-        success: false,
-        message: "This email is already in use."
-      });
+      return res.status(400).json({ success: false, message: "This email is already in use." });
     }
 
     const { data, error: signupError } = await supabaseClient.auth.signUp({
@@ -63,12 +62,11 @@ app.post("/dtect/signup", async (req, res) => {
       options: {
         data: {
           name: `${first_name} ${last_name}`,
-          temporaryPassword: password,
           first_name,
           last_name,
           role,
         },
-        emailRedirectTo: "https://www.dtectsystem.online/setpassword"
+        redirectTo: 'https://www.dtectsystem.online/account'
       },
     });
 
@@ -76,6 +74,7 @@ app.post("/dtect/signup", async (req, res) => {
       console.error('Account Creation Error:', signupError);
       return res.status(400).json({ success: false, message: signupError.message });
     }
+    
 
     const user = data.user;
     if (!user || !user.id) {
@@ -97,6 +96,67 @@ app.post("/dtect/signup", async (req, res) => {
       console.error('Error inserting profile:', insertError);
       return res.status(500).json({ success: false, message: "Failed to create profile." });
     }
+    
+    const { data: linkData, error: linkError } = await supabaseClient.auth.admin.generateLink({
+      type: "signup",
+      email,
+      password,
+      options: {
+        data: { first_name, last_name, role },
+        redirectTo: "https://www.dtectsystem.online/account",
+      },
+    });
+
+    if (linkError) throw linkError;
+
+    const confirmationLink = linkData?.properties?.action_link;
+
+    const emailBody = `
+      <div style="font-family: 'Segoe UI', Arial, sans-serif; background-color: #f4f6f8; padding: 30px;">
+        <div style="max-width: 600px; background: #ffffff; margin: auto; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+          
+          <div style="background-color: #1e3c72; color: white; padding: 20px; text-align: center;">
+            <h2 style="margin: 0;">D-TECT Account Confirmation</h2>
+          </div>
+          
+          <div style="padding: 25px; color: #333;">
+            <h4>Welcome to DTECT, ${first_name}!</h4>
+            <p>Your email address is signed up for <strong style="color: #1e3c72;">D-TECT</strong>.<br>
+            Please confirm to activate your account and start using the system.<br>
+            <br>Auto-Generated Password: <b>${password}</b>
+            <br/><small>You are the only one who knows this password. Do not share this with anyone.</small><br>
+            <br>Set your new password immediately.</p>
+            
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${confirmationLink}" 
+                style="display:inline-block; background-color: #1e3c72; color:white; font-weight:bold; padding:12px 25px; text-decoration:none; border-radius:6px;">
+                Confirm Sign Up
+              </a>
+            </div>
+
+            <p style="font-size: 14px; color:#555;">
+              If you didn’t create this account, you can safely ignore this email.
+            </p>
+
+            <hr style="margin: 30px 0; border: none; border-top: 1px solid #ddd;" />
+
+            <p style="font-size: 12px; color: #777; text-align: center;">
+              D-TECT © 2025 <br/>
+              San Pablo City, Laguna | All Rights Reserved
+            </p>
+          </div>
+        </div>
+      </div>
+      `;
+
+    const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
+    sendSmtpEmail.sender = sender;
+    sendSmtpEmail.to = receivers;
+    sendSmtpEmail.subject = "Confirm Your D-TECT Account";
+    sendSmtpEmail.htmlContent = emailBody;
+
+    await brevo.sendTransacEmail(sendSmtpEmail);
+
     res.status(200).json({ success: true, message: `Account Created. Email is sent to user.` });
   } catch (err) {
     console.error('Server error during signup:', err);
@@ -134,7 +194,7 @@ app.get("/dtect/check-confirmation/:email", async (req, res) => {
 app.post("/dtect/login", async (req, res) => {
   const { email, password } = req.body;
   try {
-    const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabaseAnons.auth.signInWithPassword({ email, password });
     if (error) {
       return res.status(401).json({ success: false, message: error.message });
     }
