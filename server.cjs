@@ -135,6 +135,7 @@ app.post("/dtect/signup", async (req, res) => {
       `;
 
     const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
+    const receivers = [{ email: email, name: `${first_name} ${last_name}` }];
     sendSmtpEmail.sender = sender;
     sendSmtpEmail.to = receivers;
     sendSmtpEmail.subject = "Confirm Your D-TECT Account";
