@@ -332,6 +332,14 @@ thead th {
     background: transparent;
     cursor: pointer;
 }
+#generate-forecast { 
+    padding: 5px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease-in;
+    background-color: #e0e7f2;
+}
+#generate-forecast:hover { background-color: #d3dce8; }
 #barangay-details {
     margin-top: 20px;
     border-radius: 10px;
