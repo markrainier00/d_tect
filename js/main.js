@@ -1305,7 +1305,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     labels: ["Male", "Female"],
                     datasets: [{
                         data: [safeNum(record.male), safeNum(record.female)],
-                        backgroundColor: ['#36A2EB', '#1e3c72']
+                        backgroundColor: ['#36A2EB', '#1e3c72'],
+                        borderWidth: 0
                     }]
                 },
                 options: {
@@ -1351,7 +1352,8 @@ document.addEventListener('DOMContentLoaded', () => {
                             safeNum(record.age_51_60),
                             safeNum(record.age_61_above)
                         ],
-                        backgroundColor: ['#36A2EB', '#1E3C72', '#FF4500', '#2ECC71', '#FF1493', '#FFD700', '#800080']
+                        backgroundColor: ['#36A2EB', '#1E3C72', '#FF4500', '#2ECC71', '#FF1493', '#FFD700', '#800080'],
+                        borderWidth: 0
                     }]
                 },
                 options: {
