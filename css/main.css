@@ -581,7 +581,7 @@ iframe {
     }
 }
 @media (max-width: 650px) {
-    #forecast, #barangay, #contact, #prevention {
+    #forecast, #barangay, #contact, #prevention, #year {
         padding: 20px 10px;
         text-align: center;
     }
