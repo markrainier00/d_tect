@@ -656,6 +656,8 @@ iframe {
     }
     .yearly {
         flex-direction: column;
+        justify-content: center;
+        align-items: center;
     }
 
     .year-header {
@@ -665,7 +667,7 @@ iframe {
     }
     .yearly-chart-panel { 
         min-width: 100px;
-        max-width: 300px;
+        max-width: 250px;
     }
     .yearly-card-container {
         flex-direction: column;
