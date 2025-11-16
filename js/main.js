@@ -586,6 +586,16 @@ async function loadBarangayData() {
     }
 }
 
+async function updateTotalCases() {
+    const response = await fetch('/api/dengue-data');
+    const data = await response.json();
+
+    const totalCases = Object.values(data).reduce((a, b) => a + b, 0);
+
+    document.getElementById("total-cases-value").textContent = totalCases.toLocaleString();
+}
+
+
 // =========Forecast Section=========
 let forecastMap, barangayChart, cityChart;
 const loadModal = document.getElementById('load');
@@ -841,7 +851,7 @@ async function displayForecast(barangayForecastData, citywideForecastData) {
 
         // Initial load
         document.querySelectorAll(".placeholder-text").forEach(el => el.style.display = "none");
-        document.querySelector(".week-dropdown").style.display = "block";
+        document.getElementById("week-dropdown").style.display = "block";
         document.querySelector(".barangay-citywide-wrapper").style.display = "flex";
         loadModal.style.display = "none";
         document.getElementById("forecast-description").style.display = "none";
@@ -1069,13 +1079,14 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchData();
     getMapDataAndDisplay();
     loadBarangayData();
+    updateTotalCases();
     loadContent();
     loadPreventionContent();
     loadContactDetails();
     initMap();
     showInitialMessage();
     loadVideos();
-    
+
     const sidebar = document.querySelector('.sidebar');
     const hamburgerBtn = document.querySelector('.hamburger-btn');
     const mainContent = document.querySelector('.main-content');
@@ -1175,5 +1186,252 @@ document.addEventListener('DOMContentLoaded', () => {
         overlay.addEventListener('click', closeAllModals);
     }
     initializeModal('info-btn', infoModal); 
+
+
+    (async () => {
+        const yearSelect = document.getElementById("year-select");
+        const totalCasesEl = document.getElementById("total-cases-value");
+        
+        let breakdownChart = null;
+        let genderChart = null;
+        let ageChart = null;
+
+        let yearsData = {};
+        let yearlyDetails = {};
+        let allBarangayRecords = [];
+
+        const safeNum = v => (typeof v === "number" ? v : Number(v) || 0);
+        
+        function updateTotalForYear(year, yearsData, breakdownData) {
+            let total = 0;
+
+            if (year === "All Years") {
+                total = Object.values(yearsData).reduce((s, v) => s + safeNum(v), 0);
+            } else {
+                total = Object.values(breakdownData).reduce((s, v) => s + safeNum(v), 0);
+            }
+
+            totalCasesEl.textContent = "TOTAL DENGUE CASES RECORDED: " + total.toLocaleString();
+        }
+
+        async function fetchYears() {
+            try {
+                const res = await fetch("/api/dengue-data");
+                if (!res.ok) throw new Error("Failed to fetch yearly data");
+                
+                return res.json();
+            } catch (e) {
+                console.error(e);
+                return {};
+            }
+        }
+
+        // Getting data for bar barangay
+        async function fetchBreakdown(year) {
+            try {
+                const url =
+                    year === "All Years"
+                    ? "/api/barangay-data"
+                    : `/api/dengue-data/breakdown/${encodeURIComponent(year)}`;
+                
+                const res = await fetch(url);
+                if (!res.ok) throw new Error("Failed to fetch breakdown");
+                
+                const data = await res.json();
+
+                if (year === "All Years") {
+                    if (!allBarangayRecords.length) allBarangayRecords = data;
+                    
+                    return data.reduce((acc, r) => {
+                        const b = r.barangay || r.Barangay || "Unknown";
+                        acc[b] = (acc[b] || 0) + safeNum(r.total_cases || r.total_cases_sum);
+                        return acc;
+                    }, {});
+                }
+                return data;
+            } catch (e) {
+                console.error(e);
+                return {};
+            }
+        }
+
+        // Render bar barangay
+        async function renderBreakdownChart(year) {
+            const breakdownData = await fetchBreakdown(year);
+            const labels = Object.keys(breakdownData).sort();
+            const data = Object.values(breakdownData).map(safeNum);
+
+            if (breakdownChart) breakdownChart.destroy();
+
+            const ctx = document.getElementById("breakdown-chart").getContext("2d");
+            
+            breakdownChart = new Chart(ctx, {
+                type: "bar",
+                data: {
+                    labels,
+                    datasets: [{
+                        label: `Cases (${year})`,
+                        data,
+                        backgroundColor: "#1e3c72"
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true } }, 
+                    scales: { x: { display: false } }
+                }
+            });
+            return breakdownData; 
+        }
+
+        // Getting data for pie age and gender
+        async function fetchYearlyDetails() {
+                const res = await fetch(`/api/yearly-details/`);
+                if (!res.ok) throw new Error("Failed to fetch yearly details");
+                return await res.json();
+        }
+
+        // Render pie gender
+        function renderGenderChart(record) {
+            const ctx = document.getElementById("genderChart").getContext("2d");
+
+            if (genderChart) genderChart.destroy();
+            if (!record) return;
+
+            genderChart = new Chart(ctx, {
+                type: "pie",
+                data: {
+                    labels: ["Male", "Female"],
+                    datasets: [{
+                        data: [safeNum(record.male), safeNum(record.female)],
+                        backgroundColor: ['#36A2EB', '#1e3c72']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: "right",
+                        }
+                    }
+                }
+            });
+        }
+
+        // Render pie age
+        function renderAgeChart(record) {
+            const ctx = document.getElementById("ageChart").getContext("2d");
+
+            if (ageChart) ageChart.destroy();
+            if (!record) return;
+
+            ageChart = new Chart(ctx, {
+                type: "pie",
+                data: {
+                    labels: [
+                        "0–10", "11–20", "21–30",
+                        "31–40", "41–50", "51–60", "61+"
+                    ],
+                    datasets: [{
+                        data: [
+                            safeNum(record.age_0_10),
+                            safeNum(record.age_11_20),
+                            safeNum(record.age_21_30),
+                            safeNum(record.age_31_40),
+                            safeNum(record.age_41_50),
+                            safeNum(record.age_51_60),
+                            safeNum(record.age_61_above)
+                        ],
+                        backgroundColor: ['#36A2EB', '#1E3C72', '#FF4500', '#2ECC71', '#FF1493', '#FFD700', '#800080']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: "right",
+                        }
+                    }
+                }
+            });
+        }
+
+        // All  years - pie gender and age
+        function sumAllYearsDetails() {
+            const result = {
+                male: 0, female: 0,
+                age_0_10: 0, age_11_20: 0, age_21_30: 0,
+                age_31_40: 0, age_41_50: 0, age_51_60: 0, age_61_above: 0
+            };
+
+            Object.values(yearlyDetails).forEach(r => {
+                for (const key in result) {
+                    result[key] += safeNum(r[key]);
+                }
+            });
+
+            return result;
+        }
+        
+        // Dropdown option filling
+        function buildYearDropdown(years) {
+            yearSelect.innerHTML = "";
+
+            const allOption = document.createElement("option");
+            allOption.value = "All Years";
+            allOption.textContent = "All Years";
+            yearSelect.appendChild(allOption);
+
+            years.forEach(y => {
+                const opt = document.createElement("option");
+                opt.value = y;
+                opt.textContent = y;
+                yearSelect.appendChild(opt);
+            });
+
+            yearSelect.value = "All Years";
+        }
+
+        // Initialize charts
+        async function init() {
+            yearsData = await fetchYears();
+            yearlyDetails = await fetchYearlyDetails();
+
+            const yearKeys = Object.keys(yearsData).sort((a, b) => a - b);
+
+            buildYearDropdown(yearKeys);
+
+            const breakdownData = await renderBreakdownChart("All Years");
+            updateTotalForYear("All Years", yearsData, breakdownData);
+
+            const summed = sumAllYearsDetails();
+            renderGenderChart(summed);
+            renderAgeChart(summed);
+        }
+        
+        // Select change
+        yearSelect.addEventListener("change", async () => {
+            const selected = yearSelect.value;
+
+            const breakdownData = await renderBreakdownChart(selected);
+            updateTotalForYear(selected, yearsData, breakdownData);
+
+            if (selected === "All Years") {
+                const combined = sumAllYearsDetails();
+                renderGenderChart(combined);
+                renderAgeChart(combined);
+            } else {
+                renderGenderChart(yearlyDetails[selected]);
+                renderAgeChart(yearlyDetails[selected]);
+            }
+        });
+
+        await init();
+    })();
 
 }); 

@@ -138,7 +138,7 @@ header h5 {
     background: #f9f9f9;
     border-radius: 20px;
     box-shadow: 0 0 3px rgba(0,0,0,0.1);
-    padding: 40px 30px;
+    padding: 20px;
     margin: 20px 10px 20px 10px;
     justify-content: center;
 }
@@ -152,23 +152,24 @@ header h5 {
     flex-wrap: wrap;
     border-radius: 20px;
     justify-content: space-around;
-    padding: 50px 30px;
     box-sizing: border-box;
 }
+#dashboard, #charts, #barangay { padding: 20px; }
 .dashboard-card, .chart-card, .barangay-card {
     display: flex;
     flex-direction: column;
     flex: 1 1 0;
-    background-color: rgba(0, 0, 0, 0.2);
     margin: 5px;
     padding: 20px;
     border-radius: 10px;
     text-align: center;
     box-sizing: border-box;
 }
+.dashboard-card, .chart-card, .barangay-card { background-color: rgba(0, 0, 0, 0.2); }
 .dashboard-card, .chart-card {
-    max-width: 450px;
-    min-width: 250px;}
+    max-width: 500px;
+    min-width: 250px;
+}
 #dashboard {background: #1e3c72; color: white; margin: 0 10px;}
 .dashboard-card {
     justify-content: flex-end;
@@ -194,10 +195,10 @@ header h5 {
     box-shadow: 0 0 10px rgba(0,0,0,0.2);
     font-size: 10px;
 }
-#month-trend, #year-trend,
+/* #month-trend, #year-trend,
 #age-chart, #gender-chart {
     width: 200px;
-}
+} */
 .chart-card {
     background-color: #ffffff;
     box-shadow: 0 2px 5px rgba(0,0,0,0.3);
@@ -304,15 +305,16 @@ thead th {
     align-items: center;
     box-sizing: border-box;
 }
-.search-container, .week-dropdown { 
+.search-container, .control-container { 
     position: relative;
     border: 1px solid #ccc;
     border-radius: 8px;
     margin: 5px;
-    width: 100%;
     gap: 5px;
 }
-.search-input, #forecast-week-select {
+.search-container { width: 100%; }
+.control-container { width: 300px; }
+.search-input, #forecast-week-select, #year-select {
     width: 100%;
     padding: 12px 80px 12px 12px;
     font-size: 16px;
@@ -339,6 +341,68 @@ thead th {
     display: none;
     flex-direction: column;
 }
+
+#year-control {
+    justify-content: flex-end;
+}
+.year-header {
+    display: flex;
+    flex-direction: column;
+}
+.year-header-cases {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.yearly {
+    display: flex;
+    flex-wrap: wrap;
+    background-color: #ffffff;
+    border-radius: 20px;
+    justify-content: space-around;
+    box-sizing: border-box;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    gap: 10px;
+    padding: 10px;
+}
+.yearly-chart-panel  { 
+    flex: 3;
+    display: flex;
+    align-items: center;
+    min-width: 500px;
+    justify-content: center;
+}
+.yearly-chart-panel canvas {
+    display: flex;
+}
+.yearly-card-container {
+    flex: 1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 30px;
+    align-items: center;
+    justify-content: center;
+}
+.yearly-card {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 0;
+    padding: 5px;
+    border-radius: 10px;
+    text-align: center;
+    box-sizing: border-box;
+    justify-content: flex-end;
+    min-width: 350px;
+    max-width: 500px;
+    max-height: 200px;
+    min-height: 100px;
+}
+.yearly-card canvas {
+    box-sizing: border-box;
+    margin: 0;
+}
+
+
 #forecast-description {
     display: flex;
     max-width: 500px;
@@ -364,12 +428,12 @@ thead th {
     justify-content: center;
     box-sizing: border-box;
 }
-.forecast-controls {
+.control {
     display: flex;
     align-items: center;
     margin-bottom: 10px;
     gap: 10px;
-    justify-content: space-between;
+    justify-content: center;
 }
 #forecast-week-select {
     font-family: 'Poppins', sans-serif;
@@ -379,7 +443,7 @@ thead th {
 }
 
 /* Prevention */
-.message, .yearly-header {
+.message {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -585,6 +649,23 @@ iframe {
     }
     .modal {
         z-index: 1005;
+    }
+    
+    #total-cases-value {
+        font-size: medium;
+    }
+    .year-header {
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+    }
+    .yearly-chart-panel  { 
+        min-width: 200px;
+    }
+    .yearly-card {
+        min-width: 200px;
+        max-height: 150px;
+        min-height: 100px;
     }
 }
 

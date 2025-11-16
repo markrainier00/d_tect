@@ -8,9 +8,14 @@
     <link rel="icon" href="assets/D-TECT.png" type="image/x-icon" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdn.datatables.net/2.0.2/css/dataTables.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/2.0.2/js/dataTables.min.js"></script>
 
 </head>
 <body>
@@ -40,8 +45,8 @@
             <ul>
                 <li><a href="#dashboard"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a></li>
                 <li><a href="#barangay"><i class="fas fa-city"></i><span>Barangays</span></a></li>
+                <li><a href="#year"><i class="fas fa-calendar-alt"></i><span>Yearly </span></a></li>
                 <li><a href="#forecast"><i class="fas fa-chart-line"></i><span>Forecast</span></a></li>
-                <!-- <li><a href="#year"><i class="fas fa-calendar-alt"></i><span>Year</span></a></li> -->
                 <li><a href="#prevention"><i class="fas fa-shield-alt"></i><span>Prevention</span></a></li>
                 <li><a href="#contact"><i class="fas fa-envelope"></i><span>Contact</span></a></li>
             </ul>
@@ -68,11 +73,11 @@
                     <a href="#barangay"><span>See details</span></a>
                 </div>
                 <div class="chart-card">
-                    <h3>Dengue Cases by Gender</h3>
+                    <h3>Dengue Incidence by Gender</h3>
                     <canvas id="gender-chart"></canvas>
                 </div>
                 <div class="chart-card">
-                    <h3>Dengue Cases by Age Group</h3>
+                    <h3>Dengue Incidence by Age Group</h3>
                     <canvas id="age-chart"></canvas>
                 </div>
             </div>
@@ -92,10 +97,39 @@
                     </div>
                 </div>
             </div>
+
+    <div id="year"  class="content-section">
+        <div class="year-header">
+            <div class="control" id="year-control">
+                <div class="control-container">
+                    <select id="year-select"></select>
+                </div>
+            </div>
+            <div class="year-header-cases">
+                <h2 id="total-cases-value">Loading...</h2>
+            </div>
+        </div>
+        <div class="yearly">
+            <div class="yearly-chart-panel">
+                <canvas id="breakdown-chart"></canvas>
+            </div>
+            <div class="yearly-card-container">
+                <div class="yearly-card">
+                    <canvas id="genderChart"></canvas>
+                </div>
+                <div class="yearly-card">
+                    <canvas id="ageChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+        
+        
+
             <div id="forecast" class="content-section">
                 <h2 class="section-title">Dengue Incidence Forecast</h2>
-                <div class="forecast-controls">
-                    <div class="search-container">
+                <div class="control">
+                    <div class="control-container">
                         <input class="search-input" type="number" id="weeks-input" min="1" placeholder="Enter week/s to forecast">
                         <button class="search-button" id="generate-forecast">Generate</button>
                     </div>
@@ -123,8 +157,8 @@
                         </div>
                     </div>
                     <div class="forecast-wrapper">
-                        <div class="forecast-controls">
-                            <div class="week-dropdown">
+                        <div class="control">
+                            <div class="control-container" id="week-dropdown">
                                 <select id="forecast-week-select"></select>
                             </div>
                         </div><div class="barangay-forecast">
@@ -145,18 +179,6 @@
                     </div>
                 </div>
             </div>
-            <!-- <div id="year" class="content-section">
-                <h2 class="section-title">Yearly Case Analysis – San Pablo City, Laguna</h2>
-                
-                <div class="yearly-header">
-                    <h1 id="total-cases-value">Loading...</h1>
-                    <h3>TOTAL DENGUE CASES RECORDED</h3>
-                </div>
-                <div class="tabs tab-selectors">
-                    <div class="tab active" data-year="All Years">All Years Trend</div>
-                    <div class="tab" data-year="2021">2021</div>
-                </div>
-            </div> -->
             <div id="prevention" class="content-section">
                 <div class="message">
                     <h1 id="prevention_header_title"></h1>
@@ -190,10 +212,6 @@
                 </div>
                 <div id="hospital_map"></div>
             </div>
-            <!-- <div class="contact-details">
-                <div class="contact-details-row" id="contact-details-row"> -->
-                <!-- </div>
-            </div> -->
         </main>
     </div>
     

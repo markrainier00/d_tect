@@ -126,8 +126,13 @@ def main():
         X_temp, y_temp, test_size=0.5, random_state=42, stratify=stratify_val
     )
 
-    smote = SMOTE(random_state=42)
-    X_balanced, y_balanced = smote.fit_resample(X_train, y_train)
+    n_neighbors = 3
+    if min(class_counts.values()) >= n_neighbors:
+        smote = SMOTE(random_state=42, k_neighbors=n_neighbors)
+        X_balanced, y_balanced = smote.fit_resample(X_train, y_train)
+    else:
+        print("Skipping SMOTE due to insufficient samples in one or more classes.")
+        X_balanced, y_balanced = X_train, y_train
 
     model = XGBClassifier(
         objective="multi:softmax",

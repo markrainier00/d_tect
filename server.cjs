@@ -534,7 +534,8 @@ app.post("/api/upload", async (req, res) => {
       inserted.weather = true;
     }
 
-    await fetch('https://www.dtectsystem.online/forecast');
+    await runPython("forecast/train_barangay_model.py");
+    await runPython("forecast/train_citywide_model.py");
 
     res.json({ title: `Upload Success`, message: "Records uploaded successfully." });
   } catch (err) {
@@ -644,7 +645,8 @@ app.post('/api/deleteRecords', async (req, res) => {
       if (data.length < batchSize) break;
     }
 
-    await fetch('https://www.dtectsystem.online/forecast');
+    await runPython("forecast/train_barangay_model.py");
+    await runPython("forecast/train_citywide_model.py");
 
     res.json({ success: true });
   } catch (err) {
@@ -1074,6 +1076,99 @@ app.get('/api/videos', async (req, res) => {
   res.json(data);
 });
 
+
+app.get('/api/dengue-data', async (req, res) => {
+    try {
+        const { data, error } = await supabaseClient
+            .from('yearly_record_summary') 
+            .select('year, cases'); 
+        if (error) {
+            console.error('Supabase Yearly Query Error:', error.message);
+            return res.status(500).json({ error: 'Failed to fetch yearly data from DB.' });
+        }
+        const formattedData = data.reduce((acc, item) => {
+            acc[String(item.year)] = item.cases;
+            return acc;
+        }, {});
+
+        res.json(formattedData);
+
+    } catch (e) {
+        console.error('Yearly API Server Runtime Error:', e);
+        res.status(500).json({ error: 'Internal server error fetching yearly data.' });
+    }
+});
+
+app.get('/api/barangay-data', async (req, res) => {
+    try {
+        const { data, error } = await supabaseClient
+            .from('barangay_yearly_summary') 
+            .select('Barangay, Year, total_cases_sum')
+            .order('Year', { ascending: true })
+            .order('Barangay', { ascending: true }); 
+
+        if (error) {
+            console.error('Supabase Detailed Query Error:', error.message);
+            return res.status(500).json({ error: 'Failed to fetch detailed data from DB. Check your RLS or view definition.' });
+        }
+        const processedData = data.map(item => ({
+            year: Number(item.Year),
+            barangay: item.Barangay,
+            total_cases: item.total_cases_sum,
+        }));
+
+        res.json(processedData);
+
+    } catch (e) {
+        console.error('Detailed API Server Error:', e);
+        res.status(500).json({ error: 'Internal server error fetching detailed data.' });
+    }
+});
+
+app.get('/api/dengue-data/breakdown/:year', async (req, res) => {
+    const { year } = req.params; 
+    
+    try {
+        const { data, error } = await supabaseClient
+            .from('barangay_yearly_summary') 
+            .select('Barangay, Year, total_cases_sum')
+            .eq('Year', Number(year));
+
+        if (error) {
+            console.error(`Supabase Breakdown Query Error for ${year}:`, error.message);
+            return res.status(500).json({ error: `Failed to fetch breakdown for ${year}.` });
+        }
+        const formattedData = data.reduce((acc, item) => {
+            acc[item.Barangay] = item.total_cases_sum;
+            return acc;
+        }, {});
+
+        res.json(formattedData);
+
+    } catch (e) {
+        console.error('Breakdown API Server Runtime Error:', e);
+        res.status(500).json({ error: 'Internal server error fetching breakdown data.' });
+    }
+});
+
+app.get('/api/yearly-details/', async (req, res) => {
+  try {
+    const { data, error } = await supabaseClient
+      .from('yearly_record_summary')
+      .select('*');
+
+    if (error) return res.status(500).json({ error: error.message });
+    res.json(data.reduce((acc, item) => {
+      acc[item.year] = item;
+      return acc;
+    }, {}));
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+
+
 async function runPython(script) {
   return new Promise((resolve, reject) => {
     const process = spawn("python", [script]);
@@ -1104,6 +1199,7 @@ app.listen(PORT, async () => {
 cron.schedule("0 2 * * *", async () => {
   console.log("Running daily forecast...");
   try {
+    await runPython("forecast/train_barangay_model.py");
     await runPython("forecast/train_citywide_model.py");
     console.log("Daily forecast completed successfully.");
   } catch (err) {
