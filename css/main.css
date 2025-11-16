@@ -654,15 +654,24 @@ iframe {
     #total-cases-value {
         font-size: medium;
     }
+    .yearly {
+        flex-direction: column;
+    }
+
     .year-header {
         justify-content: center;
         align-items: center;
         text-align: center;
     }
+    .yearly-chart-panel  { 
+        min-width: 100px;
+    }
+    .yearly-card-container {
+        flex-direction: column;
+    }
     .yearly-card {
         min-width: 100px;
-        max-height: 150px;
-        min-height: 100px;
+        min-height: 250px;
     }
 }
 

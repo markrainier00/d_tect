@@ -1314,10 +1314,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     plugins: {
                         legend: {
                             display: true,
-                            position: "right",
+                            position: (chart) => {
+                                return window.innerWidth <= 650 ? "bottom" : "right";
+                            }
                         }
                     }
                 }
+            });
+                        
+            window.addEventListener("resize", () => {
+                if (genderChart) genderChart.update();
             });
         }
 
@@ -1354,10 +1360,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     plugins: {
                         legend: {
                             display: true,
-                            position: "right",
+                            position: (chart) => {
+                                return window.innerWidth <= 650 ? "bottom" : "right";
+                            }
                         }
                     }
                 }
+            });
+            window.addEventListener("resize", () => {
+                if (ageChart) ageChart.update();
             });
         }
 
