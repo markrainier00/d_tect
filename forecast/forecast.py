@@ -13,9 +13,20 @@ SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-def fetch_table(table_name):
-    res = supabase.table(table_name).select("*").execute()
-    df = pd.DataFrame(res.data)
+def fetch_table(table_name, batch_size=1000):
+    all_data = []
+    start = 0
+    while True:
+        end = start + batch_size - 1
+        res = supabase.table(table_name).select("*").range(start, end).execute()
+        data = res.data or []
+        if not data:
+            break
+        all_data.extend(data)
+        if len(data) < batch_size:
+            break
+        start += batch_size
+    df = pd.DataFrame(all_data)
     if "id" in df.columns:
         df = df.drop(columns=["id"])
     return df
@@ -75,11 +86,13 @@ def generate_citywide_forecast(num_weeks, model, le_risk):
 
 # =========Barangays=========
 def generate_barangay_forecast(num_weeks, model, le_barangay, le_risk):
-    pop_df = fetch_table("population_records")
+    rate_df = fetch_table("rate_and_classification")
     weather_df = fetch_table("weather_records")
+    pop_df = fetch_table("population_records")
 
     pop_df = pop_df.sort_values(["Barangay", "Year", "Week"])
     barangays = pop_df["Barangay"].unique()
+
     today = datetime.today()
     current_year, current_week, _ = today.isocalendar()
 
