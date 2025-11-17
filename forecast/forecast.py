@@ -78,6 +78,7 @@ def generate_barangay_forecast(num_weeks, model, le_barangay, le_risk):
     pop_df = fetch_table("population_records")
     weather_df = fetch_table("weather_records")
 
+    pop_df = pop_df.sort_values(["Barangay", "Year", "Week"])
     barangays = pop_df["Barangay"].unique()
     today = datetime.today()
     current_year, current_week, _ = today.isocalendar()

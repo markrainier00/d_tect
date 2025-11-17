@@ -353,16 +353,20 @@ async function runForecast(mode = "barangay", numWeeks = 10) {
       output += data.toString();
     });
 
-    py.stderr.on('data', (err) => {
-      errorOutput += err.toString()
-    })
-
+    py.stderr.on("data", (err) => {
+      const msg = err.toString();
+      errorOutput += msg;
+      console.error("PYTHON STDERR:", msg);
+    });
+    
     py.on('close', (code) => {
       if (code !== 0) {
         return reject(new Error(errorOutput || `Python exited with code ${code}`));
       }
 
       try {
+        console.log("PYTHON RAW OUTPUT:", output)
+
         const forecastData = JSON.parse(output);
         resolve(forecastData);
       } catch (e) {
