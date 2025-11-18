@@ -1028,7 +1028,182 @@ app.delete('/api/users/:id', async (req, res) => {
 });
 
 // ===========================GUEST===========================
-app.get("/api/hospitals", async (req, res) => {
+app.get("/dtect/barangay/years", async (req, res) => {
+  try {
+    const { data, error } = await supabaseClient
+      .from("yearly_record_summary")
+      .select("year")
+      .order("year", { ascending: false });
+
+    if (error) throw error;
+
+    const years = Array.from(new Set(data.map(d => d.year)));
+    
+    res.json(years);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to load barangay years" });
+  }
+});
+
+app.get("/dtect/barangay/weeks/:year", async (req, res) => {
+  const year = parseInt(req.params.year);
+
+  try {
+    const { data, error } = await supabaseClient
+      .from("rate_and_classification")
+      .select("Week")
+      .eq("Year", year)
+
+    if (error) throw error;
+
+    const existingWeeks = Array.from(new Set(data.map(d => Number(d.Week))));
+    
+    const fullWeeks = Array.from({ length: 52 }, (_, i) => i + 1)
+      .filter(w => existingWeeks.includes(w));
+
+    res.json(fullWeeks);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to load barangay weeks" });
+  }
+});
+
+app.get("/dtect/barangay/latest", async (req, res) => {
+  try {
+    const { data, error } = await supabaseClient
+      .from("rate_and_classification")
+      .select("Year, Week")
+      .order("Year", { ascending: false })
+      .order("Week", { ascending: false })
+      .limit(1);
+
+    if (error) throw error;
+
+    res.json(data[0]);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch latest barangay record" });
+  }
+});
+
+app.get("/dtect/barangay/data/:year/:week", async (req, res) => {
+  const { year, week } = req.params;
+
+  try {
+    const { data, error } = await supabaseClient
+      .from("rate_and_classification")
+      .select("Barangay, Year, Month, Week, Cases, attack_rate, risk_classification")
+      .eq("Year", year)
+      .eq("Week", week);
+
+    if (error) throw error;
+
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to load barangay data" });
+  }
+});
+
+app.get("/dtect/yearly/case", async (req, res) => {
+    try {
+        const { data, error } = await supabaseClient
+            .from('yearly_record_summary') 
+            .select('year, cases'); 
+        if (error) {
+            console.error('Supabase Yearly Query Error:', error.message);
+            return res.status(500).json({ error: 'Failed to fetch yearly data from DB.' });
+        }
+        const formattedData = data.reduce((acc, item) => {
+            acc[String(item.year)] = item.cases;
+            return acc;
+        }, {});
+
+        res.json(formattedData);
+
+    } catch (e) {
+        console.error('Yearly API Server Runtime Error:', e);
+        res.status(500).json({ error: 'Internal server error fetching yearly data.' });
+    }
+});
+
+app.get("/dtect/yearly/barangay-data", async (req, res) => {
+    try {
+        const { data, error } = await supabaseClient
+            .from('barangay_yearly_summary') 
+            .select('Barangay, Year, total_cases_sum')
+            .order('Year', { ascending: true })
+            .order('Barangay', { ascending: true }); 
+
+        if (error) {
+            console.error('Supabase Detailed Query Error:', error.message);
+            return res.status(500).json({ error: 'Failed to fetch detailed data from DB. Check your RLS or view definition.' });
+        }
+        const processedData = data.map(item => ({
+            year: Number(item.Year),
+            barangay: item.Barangay,
+            total_cases: item.total_cases_sum,
+        }));
+
+        res.json(processedData);
+
+    } catch (e) {
+        console.error('Detailed API Server Error:', e);
+        res.status(500).json({ error: 'Internal server error fetching detailed data.' });
+    }
+});
+
+app.get("/dtect/yearly/city-data/:year", async (req, res) => {
+    const { year } = req.params; 
+    
+    try {
+        const { data, error } = await supabaseClient
+            .from('barangay_yearly_summary') 
+            .select('Barangay, Year, total_cases_sum')
+            .eq('Year', Number(year));
+
+        if (error) {
+            console.error(`Supabase Breakdown Query Error for ${year}:`, error.message);
+            return res.status(500).json({ error: `Failed to fetch breakdown for ${year}.` });
+        }
+        const formattedData = data.reduce((acc, item) => {
+            acc[item.Barangay] = item.total_cases_sum;
+            return acc;
+        }, {});
+
+        res.json(formattedData);
+
+    } catch (e) {
+        console.error('Breakdown API Server Runtime Error:', e);
+        res.status(500).json({ error: 'Internal server error fetching breakdown data.' });
+    }
+});
+
+app.get("/dtect/yearly/city-data", async (req, res) => {
+  try {
+    const { data, error } = await supabaseClient
+      .from('yearly_record_summary')
+      .select('*');
+
+    if (error) return res.status(500).json({ error: error.message });
+    res.json(data.reduce((acc, item) => {
+      acc[item.year] = item;
+      return acc;
+    }, {}));
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.get("/dtect/videos", async (req, res) => {
+  const { data, error } = await supabaseClient
+    .from('videos')    
+    .select('id, title, video_id')
+    .order('id', { ascending: true });
+
+  if (error) return res.status(500).send(error.message);
+
+  res.json(data);
+});
+
+app.get("/dtect/hospitals", async (req, res) => {
   const { lat, lon } = req.query;
 
   if (!lat || !lon) {
@@ -1065,108 +1240,6 @@ app.get("/api/hospitals", async (req, res) => {
   } catch (err) {
     console.error("Error fetching hospitals:", err);
     res.status(500).json({ error: err.message });
-  }
-});
-
-app.get("/api/videos", async (req, res) => {
-  const { data, error } = await supabaseClient
-    .from('videos')    
-    .select('id, title, video_id')
-    .order('id', { ascending: true });
-
-  if (error) return res.status(500).send(error.message);
-
-  res.json(data);
-});
-
-
-app.get('/api/dengue-data', async (req, res) => {
-    try {
-        const { data, error } = await supabaseClient
-            .from('yearly_record_summary') 
-            .select('year, cases'); 
-        if (error) {
-            console.error('Supabase Yearly Query Error:', error.message);
-            return res.status(500).json({ error: 'Failed to fetch yearly data from DB.' });
-        }
-        const formattedData = data.reduce((acc, item) => {
-            acc[String(item.year)] = item.cases;
-            return acc;
-        }, {});
-
-        res.json(formattedData);
-
-    } catch (e) {
-        console.error('Yearly API Server Runtime Error:', e);
-        res.status(500).json({ error: 'Internal server error fetching yearly data.' });
-    }
-});
-
-app.get('/api/barangay-data', async (req, res) => {
-    try {
-        const { data, error } = await supabaseClient
-            .from('barangay_yearly_summary') 
-            .select('Barangay, Year, total_cases_sum')
-            .order('Year', { ascending: true })
-            .order('Barangay', { ascending: true }); 
-
-        if (error) {
-            console.error('Supabase Detailed Query Error:', error.message);
-            return res.status(500).json({ error: 'Failed to fetch detailed data from DB. Check your RLS or view definition.' });
-        }
-        const processedData = data.map(item => ({
-            year: Number(item.Year),
-            barangay: item.Barangay,
-            total_cases: item.total_cases_sum,
-        }));
-
-        res.json(processedData);
-
-    } catch (e) {
-        console.error('Detailed API Server Error:', e);
-        res.status(500).json({ error: 'Internal server error fetching detailed data.' });
-    }
-});
-
-app.get('/api/dengue-data/breakdown/:year', async (req, res) => {
-    const { year } = req.params; 
-    
-    try {
-        const { data, error } = await supabaseClient
-            .from('barangay_yearly_summary') 
-            .select('Barangay, Year, total_cases_sum')
-            .eq('Year', Number(year));
-
-        if (error) {
-            console.error(`Supabase Breakdown Query Error for ${year}:`, error.message);
-            return res.status(500).json({ error: `Failed to fetch breakdown for ${year}.` });
-        }
-        const formattedData = data.reduce((acc, item) => {
-            acc[item.Barangay] = item.total_cases_sum;
-            return acc;
-        }, {});
-
-        res.json(formattedData);
-
-    } catch (e) {
-        console.error('Breakdown API Server Runtime Error:', e);
-        res.status(500).json({ error: 'Internal server error fetching breakdown data.' });
-    }
-});
-
-app.get('/api/yearly-details/', async (req, res) => {
-  try {
-    const { data, error } = await supabaseClient
-      .from('yearly_record_summary')
-      .select('*');
-
-    if (error) return res.status(500).json({ error: error.message });
-    res.json(data.reduce((acc, item) => {
-      acc[item.year] = item;
-      return acc;
-    }, {}));
-  } catch (e) {
-    res.status(500).json({ error: e.message });
   }
 });
 

@@ -258,11 +258,11 @@ function displayDashboard(totalCases, years, totals, monthsWithData, months, tot
     document.getElementById('loading').style.display = 'none';
 }
 
-async function getMapDataAndDisplay() {
+async function loadCurrentBarangayMap() {
     try {
         const { data, error } = await supabaseClient
             .from('rate_and_classification')
-            .select('Barangay, Year, Month, Week, Cases, attack_rate, risk_classification')
+            .select('Barangay, Year, Month, Week, attack_rate, risk_classification')
             .order('Week', { ascending: false })
             .eq('Year', currentYear);
 
@@ -270,14 +270,272 @@ async function getMapDataAndDisplay() {
             console.error('Error fetching Supabase data:', error);
             return;
         }
-
+        
         const latestRecord = data[0];
         const currentMonth = latestRecord.Month ? latestRecord.Month : 'No Data';
         const currentWeek = latestRecord.Week ? latestRecord.Week : 'N/A';
-
         const labelElement = document.getElementById('current-period');
         if (labelElement) {
             labelElement.textContent = `Showing data for ${currentMonth} ${currentYear}, Week ${currentWeek}`;
+        }
+        const latestByBarangay = Object.values(
+            data.reduce((acc, record) => {
+                if (!acc[record.Barangay] || record.Week > acc[record.Barangay].Week) {
+                    acc[record.Barangay] = record;
+                }
+                return acc;
+            }, {})
+        );
+
+        const geoResponse = await fetch('assets/SAN_PABLO_MAP.geojson');
+        const geojsonData = await geoResponse.json();
+
+        geojsonData.features.forEach(feature => {
+            const barangayName = feature.properties.name;
+            const barangayData = latestByBarangay.find(
+                r => r.Barangay.toLowerCase().trim() === barangayName.toLowerCase().trim()
+            );
+            feature.properties.risk_classification = barangayData?.risk_classification || "No data yet";
+        });
+
+        const map1 = L.map('barangay-map1').setView([14.05, 121.33], 11);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map1);
+
+        L.geoJSON(geojsonData, {
+            style: feature => ({
+                color: '#1e3c72',
+                weight: 0.5,
+                opacity: 1,
+                fillColor: getColorForRiskClassification(feature.properties.risk_classification),
+                fillOpacity: 1
+            }),
+            onEachFeature: (feature, layer) => {
+                layer.bindPopup(`<b>${feature.properties.name}</b><br>Risk: ${feature.properties.risk_classification}`);
+                layer.on({
+                    mouseover: e => e.target.setStyle({ weight: 3 }),
+                    mouseout: e => e.target.setStyle({ weight: 0.5 })
+                });
+            }
+        }).addTo(map1);
+
+    } catch (err) {
+        console.error('Error loading static barangay map:', err);
+    }
+}
+
+// =========Barangay Section=========
+async function initializeBarangayUI() {
+    try {
+        // Year dropdown
+        const latestRes = await fetch("/dtect/barangay/latest");
+        const latest = await latestRes.json();
+        const latestYear = latest.Year;
+        const latestWeek = latest.Week;
+
+        const barangayYearSelect = document.getElementById("barangay-year-select");
+        const barangayYearsRes = await fetch("/dtect/barangay/years");
+        const barangayYears = await barangayYearsRes.json();
+
+        barangayYearSelect.innerHTML = barangayYears
+            .map(y => `<option value="${y}" ${y === latestYear ? "selected" : ""}>${y}</option>`)
+            .join("");
+
+        // Week dropdown
+        const barangayWeekSelect = document.getElementById("barangay-week-select");
+        const barangayWeeksRes = await fetch(`/dtect/barangay/weeks/${latestYear}`);
+        const barangayWeeks = await barangayWeeksRes.json();
+
+        barangayWeekSelect.innerHTML = barangayWeeks
+            .map(w => `<option value="${w}" ${w === latestWeek ? "selected" : ""}>Week ${w}</option>`)
+            .join("");
+
+        await loadBarangayData(latestYear, latestWeek);
+        await loadBarangayRiskMap(latestYear, latestWeek);
+
+        // Year change - update week dropdown
+        barangayYearSelect.addEventListener("change", async () => {
+            const selectedYear = parseInt(barangayYearSelect.value);
+
+            const barangayWeeksRes = await fetch(`/dtect/barangay/weeks/${selectedYear}`);
+            const newBarangayWeeks = await barangayWeeksRes.json();
+
+            barangayWeekSelect.innerHTML = newBarangayWeeks
+                .map(w => `<option value="${w}">Week ${w}</option>`)
+                .join("");
+
+            
+            const lastWeek = newBarangayWeeks[newBarangayWeeks.length - 1];
+            barangayWeekSelect.value = lastWeek;
+
+            await loadBarangayData(selectedYear, lastWeek);
+            await loadBarangayRiskMap(selectedYear, lastWeek);
+        });
+
+        // Week change - load data
+        barangayWeekSelect.addEventListener("change", async () => {
+            const selectedYear = parseInt(barangayYearSelect.value);
+            const selectedWeek = parseInt(barangayWeekSelect.value);
+
+            await loadBarangayData(selectedYear, selectedWeek);
+            await loadBarangayRiskMap(selectedYear, selectedWeek);
+        });
+
+    } catch (err) {
+        console.error("Initialization Error:", err);
+    }
+}
+
+async function loadBarangayData(year, week) {
+    document.getElementById('barangay-details').innerHTML = 
+        `<p>Please enter a barangay name.</p>`;
+    try {
+        const res = await fetch(`/dtect/barangay/data/${year}/${week}`);
+        const data = await res.json();
+        if (!data || data.length === 0) return;
+
+        const latest = data[0];
+
+        // Header
+        document.getElementById('barangay-heading').textContent =
+            `San Pablo City as of ${latest.Month} ${latest.Year}, Week ${latest.Week}`;
+
+        // Table
+        const listContainer = document.getElementById('barangay-list');
+
+        data.sort((a, b) => {
+            if (b.attack_rate !== a.attack_rate) return b.attack_rate - a.attack_rate;
+            return a.Barangay.localeCompare(b.Barangay);
+        });
+
+        listContainer.innerHTML = `
+            <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                <thead>
+                    <th>Barangay</th>
+                    <th>Attack Rate</th>
+                    <th>Risk Level</th>
+                </thead>
+                <tbody>
+                    ${data.map(b => {
+                        let color = '';
+                        if (b.risk_classification === 'Low Risk') color = '#2ECC71';
+                        else if (b.risk_classification === 'Moderate Risk') color = '#FFD700';
+                        else if (b.risk_classification === 'High Risk') color = '#FF6347';
+
+                        return `
+                        <tr>
+                            <td style="padding: 8px; border-bottom: 1px solid #ddd;">${b.Barangay}</td>
+                            <td style="padding: 8px; border-bottom: 1px solid #ddd;">${b.attack_rate.toFixed(2)}</td>
+                            <td style="padding: 8px; border-bottom: 1px solid #ddd; color: ${color};">${b.risk_classification}</td>
+                        </tr>`;
+                    }).join('')}
+                </tbody>
+            </table>
+        `;
+
+        // Search barangay details
+        const searchButton = document.getElementById('search-barangay');
+        const searchInput = document.getElementById('barangay-search');
+        searchInput.value = '';
+
+        searchButton.onclick = async () => {
+            const query = searchInput.value.trim().toLowerCase();
+
+            if (!query) {
+                document.getElementById('barangay-details').innerHTML =
+                    `<p>Please enter a barangay name.</p>`;
+                return;
+            }
+
+            const { data: detailData, error: detailError } = await supabaseClient
+                .from('records')
+                .select('Barangay, Gender, Age_Group, Cases')
+                .eq('Year', year)
+                .eq('Week', week)
+                .ilike('Barangay', `%${query}%`);
+
+            if (detailError) throw detailError;
+            if (!detailData || detailData.length === 0) {
+                document.getElementById('barangay-details').innerHTML =
+                    `<p>No records found.</p>`;
+                return;
+            }
+
+            const barangay = detailData[0].Barangay.toUpperCase();
+
+            const totalMale = detailData
+                .filter(d => d.Gender === 'Male')
+                .reduce((a, b) => a + b.Cases, 0);
+
+            const totalFemale = detailData
+                .filter(d => d.Gender === 'Female')
+                .reduce((a, b) => a + b.Cases, 0);
+
+            const ageGroups = {};
+            detailData.forEach(d => {
+                ageGroups[d.Age_Group] = (ageGroups[d.Age_Group] || 0) + d.Cases;
+            });
+
+            document.getElementById('barangay-details').innerHTML = `
+                <h3>${barangay}</h3>
+                <div style="text-align: center;">
+                    <table style="margin: auto; border-collapse: collapse;">
+                        <thead>
+                            <tr>
+                                <th style="border-bottom: 2px solid #ddd; padding: 6px;">Gender</th>
+                                <th style="border-bottom: 2px solid #ddd; padding: 6px;">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding: 6px;">Male</td>
+                                <td style="padding: 6px;">${totalMale}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 6px;">Female</td>
+                                <td style="padding: 6px;">${totalFemale}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <table style="margin: auto; border-collapse: collapse;">
+                        <thead>
+                            <tr>
+                                <th style="border-bottom: 2px solid #ddd; padding: 6px;">Age Group</th>
+                                <th style="border-bottom: 2px solid #ddd; padding: 6px;">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${Object.entries(ageGroups).map(([age, total]) => `
+                                <tr>
+                                    <td style="padding: 6px;">${age}</td>
+                                    <td style="padding: 6px;">${total}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        };
+
+    } catch (err) {
+        console.error('Error loading barangay data:', err);
+    }
+}
+
+let barangayRiskMap = null;
+async function loadBarangayRiskMap(year, week) {
+    try {
+        const { data, error } = await supabaseClient
+            .from('rate_and_classification')
+            .select('Barangay, Year, Month, Week, attack_rate, risk_classification')
+            .eq('Year', year)
+            .eq('Week', week);
+
+        if (error) {
+            console.error('Error fetching Supabase data for barangayRiskMap:', error);
+            return;
         }
 
         const latestByBarangay = Object.values(
@@ -295,299 +553,49 @@ async function getMapDataAndDisplay() {
         geojsonData.features.forEach(feature => {
             const barangayName = feature.properties.name;
             const barangayData = latestByBarangay.find(
-                record => record.Barangay.toLowerCase().trim() === barangayName.toLowerCase().trim()
+                r => r.Barangay.toLowerCase().trim() === barangayName.toLowerCase().trim()
             );
-
-            // Default if no data
-            if (barangayData) {
-                feature.properties.risk_classification = barangayData.risk_classification;
-            } else {
-                feature.properties.risk_classification = 'No data yet';
-            }
+            feature.properties.risk_classification = barangayData?.risk_classification || "No data yet";
         });
 
-        const map1 = L.map('barangay-map1').setView([14.05, 121.33], 11);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap contributors'}).addTo(map1);
-        const barangayLayer1 = L.geoJSON(geojsonData, {
-            style: function(feature) {
-                const riskClassification = feature.properties.risk_classification;
-                return {
-                    color: '#1e3c72',
-                    weight: 0.5,
-                    opacity: 1,
-                    fillColor: getColorForRiskClassification(riskClassification),
-                    fillOpacity: 1
-                };
-            },
-            onEachFeature: function(feature, layer) {
-                const barangayName = feature.properties.name;
-                const riskClassification = feature.properties.risk_classification || "Unknown";
-                layer.bindPopup(`<b>${barangayName}</b><br>Risk: ${riskClassification}`);
-                
-                layer.on({
-                    mouseover: function(e) {
-                        e.target.setStyle({
-                            weight: 3,
-                            color: '#1e3c72'
-                        });
-                    },
-                    mouseout: function(e) {
-                        e.target.setStyle({
-                            weight: 0.5,
-                            color: '#1e3c72'
-                        });
-                    }
-                });
-            }
-        });
-        barangayLayer1.addTo(map1);
-
-        const legend1 = L.control({ position: 'bottomright' });
-        legend1.onAdd = function () {
-            const div = L.DomUtil.create('div', 'info legend');
-            const riskLevels = ['Low Risk', 'Moderate Risk', 'High Risk', 'No Data'];
-            const colors = ['#2ECC71', '#FFD700', '#FF6347', '#808080'];
-
-            for (let i = 0; i < riskLevels.length; i++) {
-                div.innerHTML += `
-                    <span style="display: inline-flex; align-items: center; margin-right: 10px;">
-                        <i style="
-                            background:${colors[i]};
-                            border: 1px solid #000;
-                            width: 10px;
-                            height: 10px;
-                            display: inline-block;
-                            margin-right: 3px;
-                        "></i>
-                        ${riskLevels[i]}
-                    </span>
-                `;
-            }
-            return div;
-        };
-        legend1.addTo(map1);
-        
-        const map2 = L.map('barangay-map2').setView([14.05, 121.32], 11);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap contributors'}).addTo(map2);
-        const barangayLayer2 = L.geoJSON(geojsonData, {
-            style: function(feature) {
-                const riskClassification = feature.properties.risk_classification;
-                return {
-                    color: '#1e3c72',
-                    weight: 0.5,
-                    opacity: 1,
-                    fillColor: getColorForRiskClassification(riskClassification),
-                    fillOpacity: 1
-                };
-            },
-            onEachFeature: function(feature, layer) {
-                const barangayName = feature.properties.name;
-                const riskClassification = feature.properties.risk_classification || "Unknown";
-                layer.bindPopup(`<b>${barangayName}</b><br>Risk: ${riskClassification}`);
-                
-                layer.on({
-                    mouseover: function(e) {
-                        e.target.setStyle({
-                            weight: 3
-                        });
-                    },
-                    mouseout: function(e) {
-                        e.target.setStyle({
-                            weight: 0.5
-                        });
-                    },
-                    click: () => loadBarangayData(barangayName)
-                });
-            }
-        });
-        barangayLayer2.addTo(map2);
-
-        const legend2 = L.control({ position: 'bottomright' });
-        legend2.onAdd = function () {
-            const div = L.DomUtil.create('div', 'info legend');
-            const riskLevels = ['Low Risk', 'Moderate Risk', 'High Risk', 'No Data'];
-            const colors = ['#2ECC71', '#FFD700', '#FF6347', '#808080'];
-
-            for (let i = 0; i < riskLevels.length; i++) {
-                div.innerHTML += `
-                    <span style="display: inline-flex; align-items: center; margin-right: 10px;">
-                        <i style="
-                            background:${colors[i]};
-                            border: 1px solid #000;
-                            width: 10px;
-                            height: 10px;
-                            display: inline-block;
-                            margin-right: 3px;
-                        "></i>
-                        ${riskLevels[i]}
-                    </span>
-                `;
-            }
-            return div;
-        };
-        legend2.addTo(map2);
-    } catch (error) {
-        console.error('Error in getMapDataAndDisplay:', error);
-    }
-}
-
-// =========Barangay Section=========
-async function loadBarangayData() {
-    try {
-        // Latest date on records
-        const { data: latestData, error: latestError } = await supabaseClient
-            .from('rate_and_classification')
-            .select('Year, Month, Week')
-            .order('Year', { ascending: false })
-            .order('Week', { ascending: false })
-            .limit(1);
-
-        if (latestError) throw latestError;
-        if (latestData.length === 0) return;
-
-        const latest = latestData[0];
-        document.getElementById('barangay-heading').textContent =
-            `San Pablo City as of ${latest.Month} ${latest.Year}, Week ${latest.Week}`;
-        
-        // Table for barangay latest details
-        const { data: rateData, error: rateError } = await supabaseClient
-            .from('rate_and_classification')
-            .select('Barangay, attack_rate, risk_classification')
-            .eq('Year', latest.Year)
-            .eq('Week', latest.Week)
-            .order('attack_rate', { ascending: false });
-
-        if (rateError) throw rateError;
-
-        const listContainer = document.getElementById('barangay-list');
-        rateData.sort((a, b) => {
-        if (b.attack_rate !== a.attack_rate) {
-            return b.attack_rate - a.attack_rate;
+        if (!barangayRiskMap) {
+            barangayRiskMap = L.map('barangay-map2').setView([14.05, 121.32], 11);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(barangayRiskMap);
         }
-        return a.Barangay.localeCompare(b.Barangay);
+
+        // Remove old layers
+        barangayRiskMap.eachLayer(layer => {
+            if (layer instanceof L.GeoJSON) {
+                barangayRiskMap.removeLayer(layer);
+            }
         });
 
-        listContainer.innerHTML = `
-            <table style="width: 100%; border-collapse: collapse; text-align: left;">
-                <thead>
-                    <th>Barangay</th>
-                    <th>Attack Rate</th>
-                    <th>Risk Level</th>
-                </thead>
-                <tbody>
-                    ${rateData.map(b => {
-                        let color = '';
-                        if (b.risk_classification === 'Low Risk') color = '#2ECC71';
-                        else if (b.risk_classification === 'Moderate Risk') color = '#FFD700';
-                        else if (b.risk_classification === 'High Risk') color = '#FF6347';
-                        return `
-                        <tr>
-                            <td style="padding: 8px; border-bottom: 1px solid #ddd;">${b.Barangay}</td>
-                            <td style="padding: 8px; border-bottom: 1px solid #ddd;">${b.attack_rate.toFixed(2)}</td>
-                            <td style="padding: 8px; border-bottom: 1px solid #ddd; color: ${color};">${b.risk_classification}</td>
-                        </tr>`;
-                    }).join('')}
-                </tbody>
-            </table>
-        `;
-        
-        // Search barangay details
-        const searchButton = document.getElementById('search-barangay');
-        const searchInput = document.getElementById('barangay-search');
-        
-        searchButton.addEventListener('click', async () => {
-            const query = searchInput.value.trim().toLowerCase();
-            if (!query) {
-                document.getElementById('barangay-details').innerHTML = `
-                    <p>Please enter a barangay name.</p>
-                `;
-                return;
-            }
-
-            try {
-                const { data: detailData, error: detailError } = await supabaseClient
-                    .from('records')
-                    .select('Barangay, Gender, Age_Group, Cases')
-                    .eq('Year', latest.Year)
-                    .eq('Week', latest.Week)
-                    .ilike('Barangay', `%${query}%`);
-
-                if (detailError) throw detailError;
-                if (detailData.length === 0) {
-                    document.getElementById('barangay-details').innerHTML = `
-                        <p>No records found for that barangay.</p>
-                    `;
-                    return;
-                }
-
-                const barangay = detailData[0].Barangay.toUpperCase();
-                
-                const totalMale = detailData
-                    .filter(d => d.Gender === 'Male')
-                    .reduce((a, b) => a + b.Cases, 0);
-                const totalFemale = detailData
-                    .filter(d => d.Gender === 'Female')
-                    .reduce((a, b) => a + b.Cases, 0);
-
-                const ageGroups = {};
-                detailData.forEach(d => {
-                    ageGroups[d.Age_Group] = (ageGroups[d.Age_Group] || 0) + d.Cases;
+        L.geoJSON(geojsonData, {
+            style: feature => ({
+                color: '#1e3c72',
+                weight: 0.5,
+                opacity: 1,
+                fillColor: getColorForRiskClassification(feature.properties.risk_classification),
+                fillOpacity: 1
+            }),
+            onEachFeature: (feature, layer) => {
+                layer.bindPopup(`<b>${feature.properties.name}</b><br>Risk: ${feature.properties.risk_classification}`);
+                layer.on({
+                    mouseover: e => e.target.setStyle({ weight: 3 }),
+                    mouseout: e => e.target.setStyle({ weight: 0.5 })
                 });
-
-                document.getElementById('barangay-details').innerHTML = `
-                    <h3>${barangay}</h3>
-                    <div style="text-align: center;">
-                        <table style="margin: auto; border-collapse: collapse;">
-                            <thead>
-                                <tr>
-                                    <th style="border-bottom: 2px solid #ddd; padding: 6px;">Gender</th>
-                                    <th style="border-bottom: 2px solid #ddd; padding: 6px;">Total</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td style="padding: 6px;">Male</td>
-                                    <td style="padding: 6px;">${totalMale}</td>
-                                </tr>
-                                <tr>
-                                    <td style="padding: 6px;">Female</td>
-                                    <td style="padding: 6px;">${totalFemale}</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                        
-                        <table style="margin: auto; border-collapse: collapse;">
-                            <thead>
-                                <tr>
-                                    <th style="border-bottom: 2px solid #ddd; padding: 6px;">Age Group</th>
-                                    <th style="border-bottom: 2px solid #ddd; padding: 6px;">Total</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${Object.entries(ageGroups)
-                                    .map(([age, total]) => `
-                                    <tr>
-                                        <td style="padding: 6px;">${age}</td>
-                                        <td style="padding: 6px;">${total}</td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    </div>
-                `;
-            } catch (err) {
-                console.error('Error fetching barangay details:', err);
             }
-        });
+        }).addTo(barangayRiskMap);
+
     } catch (err) {
-        console.error('Error loading barangay data:', err);
+        console.error('Error loading barangayRiskMap:', err);
     }
 }
-
+// =========Yearly Section=========
 async function updateTotalCases() {
-    const response = await fetch('/api/dengue-data');
+    const response = await fetch("/dtect/yearly/case");
     const data = await response.json();
 
     const totalCases = Object.values(data).reduce((a, b) => a + b, 0);
@@ -1017,7 +1025,7 @@ async function getNearbyHospitals(lat, lon) {
     const sanPabloLat = 14.0685;
     const sanPabloLon = 121.3259;
 
-    const res = await fetch(`/api/hospitals?lat=${sanPabloLat}&lon=${sanPabloLon}`);
+    const res = await fetch(`/dtect/hospitals?lat=${sanPabloLat}&lon=${sanPabloLon}`);
     const data = await res.json();
 
     const filtered = data.filter(h =>
@@ -1061,7 +1069,7 @@ function showInitialMessage() {
 }
 
 async function loadVideos() {
-  const response = await fetch("/api/videos");
+  const response = await fetch("/dtect/videos");
   const videos = await response.json();
 
   const container = document.getElementById('video-slides-row');
@@ -1077,8 +1085,8 @@ async function loadVideos() {
 
 document.addEventListener('DOMContentLoaded', () => {
     fetchData();
-    getMapDataAndDisplay();
-    loadBarangayData();
+    loadCurrentBarangayMap();
+    initializeBarangayUI();
     updateTotalCases();
     loadContent();
     loadPreventionContent();
@@ -1216,7 +1224,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         async function fetchYears() {
             try {
-                const res = await fetch("/api/dengue-data");
+                const res = await fetch("/dtect/yearly/city-data");
                 if (!res.ok) throw new Error("Failed to fetch yearly data");
                 
                 return res.json();
@@ -1231,8 +1239,8 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 const url =
                     year === "All Years"
-                    ? "/api/barangay-data"
-                    : `/api/dengue-data/breakdown/${encodeURIComponent(year)}`;
+                    ? "/dtect/yearly/barangay-data"
+                    : `/dtect/yearly/city-data/${encodeURIComponent(year)}`;
                 
                 const res = await fetch(url);
                 if (!res.ok) throw new Error("Failed to fetch breakdown");
@@ -1287,7 +1295,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Getting data for pie age and gender
         async function fetchYearlyDetails() {
-                const res = await fetch(`/api/yearly-details/`);
+                const res = await fetch("/dtect/yearly/case");
                 if (!res.ok) throw new Error("Failed to fetch yearly details");
                 return await res.json();
         }

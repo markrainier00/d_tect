@@ -314,7 +314,8 @@ thead th {
 }
 .search-container { width: 100%; }
 .control-container { width: 300px; }
-.search-input, #forecast-week-select, #year-select {
+.search-input, #forecast-week-select, #year-select,
+#barangay-year-select, #barangay-week-select {
     width: 100%;
     padding: 12px 80px 12px 12px;
     font-size: 16px;
@@ -350,7 +351,7 @@ thead th {
     flex-direction: column;
 }
 
-#year-control {
+#year-control, #barangay-control {
     justify-content: flex-end;
 }
 .year-header {

@@ -45,10 +45,10 @@
             <ul>
                 <li><a href="#dashboard"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a></li>
                 <li><a href="#barangay"><i class="fas fa-city"></i><span>Barangays</span></a></li>
-                <li><a href="#year"><i class="fas fa-calendar-alt"></i><span>Yearly </span></a></li>
+                <li><a href="#year"><i class="fas fa-calendar-alt"></i><span>Summary</span></a></li>
                 <li><a href="#forecast"><i class="fas fa-chart-line"></i><span>Forecast</span></a></li>
                 <li><a href="#prevention"><i class="fas fa-shield-alt"></i><span>Prevention</span></a></li>
-                <li><a href="#contact"><i class="fas fa-envelope"></i><span>Contact</span></a></li>
+                <li><a href="#contact"><i class="fas fa-envelope"></i><span>Contacts</span></a></li>
             </ul>
         </nav>
         <main class="main-content">
@@ -70,7 +70,7 @@
                 <div id="barangay-chart-card" class="chart-card">
                     <h3 id="current-period">Loading current data...</h3>
                     <div id="barangay-map1"></div>
-                    <a href="#barangay"><span>See details</span></a>
+                    <a href="#barangay"><span>Explore</span></a>
                 </div>
                 <div class="chart-card">
                     <h3>Dengue Incidence by Gender</h3>
@@ -82,6 +82,14 @@
                 </div>
             </div>
             <div id="barangay" class="content-section">
+                <div class="control" id="barangay-control">
+                    <div class="control-container">
+                        <select id="barangay-year-select"></select>
+                    </div>
+                    <div class="control-container">
+                        <select id="barangay-week-select"></select>
+                    </div>
+                </div>
                 <h2 id="barangay-heading" class="section-title">San Pablo City</h2>
                 <div class="barangay-wrapper">
                     <div class="barangay-map-container">
