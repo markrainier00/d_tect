@@ -281,6 +281,7 @@ app.get("/private", async (req, res) => {
   }
 });
 
+// =========LOG OUT=========
 app.get("/logout", (req, res) => {
   res.clearCookie("access_token");
   res.redirect("/");
@@ -1067,7 +1068,7 @@ app.get("/api/hospitals", async (req, res) => {
   }
 });
 
-app.get('/api/videos', async (req, res) => {
+app.get('/dtect/videos', async (req, res) => {
   const { data, error } = await supabaseClient
     .from('videos')    
     .select('id, title, video_id')
