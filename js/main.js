@@ -1061,7 +1061,7 @@ function showInitialMessage() {
 }
 
 async function loadVideos() {
-  const response = await fetch('/api/videos');
+  const response = await fetch("/api/videos");
   const videos = await response.json();
 
   const container = document.getElementById('video-slides-row');
