@@ -1214,7 +1214,7 @@ document.addEventListener('DOMContentLoaded', () => {
             let total = 0;
 
             if (year === "All Years") {
-                total = Object.values(yearsData).reduce((s, v) => s + safeNum(v), 0);
+                total = Object.values(breakdownData).reduce((s, v) => s + safeNum(v), 0);
             } else {
                 total = Object.values(breakdownData).reduce((s, v) => s + safeNum(v), 0);
             }
@@ -1295,7 +1295,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Getting data for pie age and gender
         async function fetchYearlyDetails() {
-                const res = await fetch("/dtect/yearly/case");
+                const res = await fetch("/dtect/yearly/city-data");
                 if (!res.ok) throw new Error("Failed to fetch yearly details");
                 return await res.json();
         }
