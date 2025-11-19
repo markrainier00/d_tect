@@ -141,7 +141,7 @@ async function fetchUsers() {
                     const message = data.message;
 
                     if (!res.ok || (data && data.success === false)) {
-                        throw new Error(data.message || 'Failed to update user status');
+                        throw new Error(data.message);
                     }
                     showStatus("D-TECT", message, { showButton: false });
 
