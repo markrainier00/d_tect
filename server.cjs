@@ -933,9 +933,14 @@ app.patch('/api/users/:id/toggle', async (req, res) => {
       .eq('id', userId)
       .single();
 
-    if (fetchUserError) throw fetchUserError;
-    if (!user) return res.status(404).json({ error: 'User not found' });
-    
+    if (fetchUserError) {
+      return res.status(500).json({ success: false, message: 'Failed to fetch user.' });
+    }
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found.' });
+    }
+
     if (user.role === 'Account Administrator' && is_enabled === false) {
       const { data: enabledAdmins, error: fetchAdminsError } = await supabaseClient
         .from('profiles')
@@ -943,7 +948,9 @@ app.patch('/api/users/:id/toggle', async (req, res) => {
         .eq('role', 'Account Administrator')
         .eq('is_enabled', true);
 
-      if (fetchAdminsError) throw fetchAdminsError;
+      if (fetchAdminsError) {
+        return res.status(500).json({ success: false, message: 'Failed to fetch admins.' });
+      }
 
       if (enabledAdmins.length <= 3) {
         return res.status(400).json({
@@ -952,13 +959,16 @@ app.patch('/api/users/:id/toggle', async (req, res) => {
         });
       }
     }
+
     const { data, error: updateError } = await supabaseClient
       .from('profiles')
       .update({ is_enabled })
       .eq('id', userId)
       .select();
 
-    if (updateError) throw updateError;
+    if (updateError) {
+      return res.status(500).json({ success: false, message: 'Update failed.' });
+    }
 
     const message = is_enabled
       ? 'User has been enabled.'
@@ -967,7 +977,7 @@ app.patch('/api/users/:id/toggle', async (req, res) => {
     res.json({ success: true, message, data });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: err.message || 'Server error' });
+    res.status(500).json({ success: false, message: err.message || 'Server error.' });
   }
 });
 app.delete('/api/users/:id', async (req, res) => {
@@ -1023,7 +1033,7 @@ app.delete('/api/users/:id', async (req, res) => {
 
   } catch (err) {
     console.error('Unexpected error:', err);
-    res.status(500).json({ error: err.message || JSON.stringify(err) });
+    res.status(500).json({ success: false, message: err.message || 'Unexpected server error.' });
   }
 });
 

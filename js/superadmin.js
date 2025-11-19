@@ -141,13 +141,13 @@ async function fetchUsers() {
                     const message = data.message;
 
                     if (!res.ok || (data && data.success === false)) {
-                        throw new Error(data.message);
+                        throw new Error(data.message || 'Failed to update user status');
                     }
                     showStatus("D-TECT", message, { showButton: false });
 
                 } catch (err) {
                     e.target.checked = previousState;
-                    showStatus("D-TECT", "Failed to update user status.", { showButton: true });
+                    showStatus("D-TECT", err.message, { showButton: true });
                 }
             });
 
