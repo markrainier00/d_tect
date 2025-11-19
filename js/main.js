@@ -815,7 +815,7 @@ async function displayForecast(barangayForecastData, citywideForecastData) {
 
             tableBody.innerHTML = `
             <table style="width: 100%; border-collapse: collapse; text-align: left;">
-            <thead><th>Barangay</td><th>Risk Level</td></thead>
+            <thead><th>Barangay</td><th>Predicted Risk</td></thead>
                 </tbody>
                     ${sortedWeekData.map(d => {
                         const color = getColorForRiskClassification(d.predicted_risk);
