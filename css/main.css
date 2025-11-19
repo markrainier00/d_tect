@@ -629,6 +629,9 @@ iframe {
         overflow: auto;
         margin-bottom: 10px;
     }
+    #barangay-control {
+        flex-direction: column;
+    }
     .prevention-content {
         height: 500px;
         overflow: auto;
