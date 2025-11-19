@@ -630,7 +630,14 @@ iframe {
         margin-bottom: 10px;
     }
     #barangay-control {
-        flex-direction: column;
+        justify-content: space-between;
+        margin: 0px;
+    }
+    #barangay-control-container {
+        width: 100%;
+    }
+    #barangay-control-container select, #year-control-container select {
+        font-size: small;
     }
     .prevention-content {
         height: 500px;
