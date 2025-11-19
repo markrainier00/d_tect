@@ -295,7 +295,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // To Close Modals
     window.addEventListener('click', (e) => {
-        if (e.target === forgotPassword || e.target === addPrevention || e.target === addContact) {
+        if (e.target === forgotPassword || e.target === addPrevention || e.target === addVideo || e.target === addContact) {
             if (forgotPassword) forgotPassword.style.display = 'none';
             if (forgotForm) forgotForm.reset(); 
             if (addPrevention) addPrevention.style.display = 'none';
