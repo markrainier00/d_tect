@@ -300,6 +300,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (forgotForm) forgotForm.reset(); 
             if (addPrevention) addPrevention.style.display = 'none';
             if (addPreventionForm) addPreventionForm.reset();
+            if (addVideo) addVideo.style.display = 'none';
+            if (addVideoForm) addVideoForm.reset();
             if (addContact) addContact.style.display = 'none';
             if (addContactForm) addContactForm.reset();
         }
