@@ -1217,7 +1217,7 @@ document.addEventListener('DOMContentLoaded', () => {
         infoText.innerHTML = `<br><strong>How it works:</strong>
         <br>By placing a pin anywhere on the map, D-TECT will automatically display the nearest hospitals in San Pablo City.<br>
         <br>A table also shows each hospital’s name, address, and distance from the pinned location.<br>
-        <br>The map helps users visualize how to reach the nearest healthcare facility quickly during urgent situations.`;
+        <br>The map helps users visualize how to reach a healthcare facility.`;
         infoModal.style.display = 'flex';
         overlay.style.display = 'block';
     });
