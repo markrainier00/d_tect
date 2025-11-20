@@ -133,7 +133,7 @@ header h5 {
     cursor: pointer;
 }
 #guest-btn { margin-left: 50px; }
-#barangay-btn, #year-btn, #forecast-btn#hospital-btn {
+#barangay-btn, #year-btn, #forecast-btn {
     align-self: flex-end;
     margin-top: 5px;
 }
