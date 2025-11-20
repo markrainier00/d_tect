@@ -101,26 +101,26 @@ app.post("/dtect/signup", async (req, res) => {
         <div style="max-width: 600px; background: #ffffff; margin: auto; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
           
           <div style="background-color: #1e3c72; color: white; padding: 20px; text-align: center;">
-            <h2 style="margin: 0;">D-TECT Account Confirmation</h2>
+            <h2 style="margin: 0;">D-TECT Account Creation</h2>
           </div>
           
           <div style="padding: 25px; color: #333;">
-            <h4>Welcome to DTECT, ${first_name}!</h4>
+            <h4>Welcome to D-TECT, ${first_name}!</h4>
             <p>Your email address is signed up for <strong style="color: #1e3c72;">D-TECT</strong>.<br>
-            Please confirm to activate your account and start using the system.<br>
+            As a ${role}, you may log in and start using the system.<br>
             <br>Auto-Generated Password: <b>${password}</b>
-            <br/><small>You are the only one who knows this password. Do not share this with anyone.</small><br>
-            <br>Set your new password immediately.</p>
+            <br/>You are the only one who knows this password. Do not share this with anyone.<br>
+            <br>You are advised to set your new password immediately.</p>
             
             <div style="text-align: center; margin: 30px 0;">
               <a href="https://www.dtectsystem.online/account" 
                 style="display:inline-block; background-color: #1e3c72; color:white; font-weight:bold; padding:12px 25px; text-decoration:none; border-radius:6px;">
-                Confirm Sign Up
+                Log In
               </a>
             </div>
 
             <p style="font-size: 14px; color:#555;">
-              If you didn’t create this account, you can safely ignore this email.
+              If you are not expecting a D-TECT account, you can safely ignore this email.
             </p>
 
             <hr style="margin: 30px 0; border: none; border-top: 1px solid #ddd;" />

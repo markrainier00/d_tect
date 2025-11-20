@@ -130,8 +130,21 @@ header h5 {
     border-color:#1e3c72;
     width: 25px;
     height: 25px;
-    margin-left: 50px;
     cursor: pointer;
+}
+#guest-btn { margin-left: 50px; }
+#barangay-btn, #year-btn, #forecast-btn#hospital-btn {
+    align-self: flex-end;
+    margin-top: 5px;
+}
+#hospital-btn {
+    align-self: flex-end;
+    margin-bottom: 5px;
+}
+#info-text {
+    text-align: justify;
+    margin: 0;
+    font-size: medium;
 }
 
 #charts, #forecast, #barangay, #prevention, #year, #contact {

@@ -37,7 +37,7 @@
             <div class="header-title"><h1>D-TECT</h1></div>
         </div>
         <div class="header-btn">
-            <button id="info-btn" class="info-btn"><i class="fas fa-info"></i></button>
+            <button id="guest-btn" class="info-btn"><i class="fas fa-info"></i></button>
         </div>
     </header>
     <div class="main-page">
@@ -104,36 +104,34 @@
                         <div id="barangay-details" class="barangay-details"></div>
                     </div>
                 </div>
+                <button id="barangay-btn" class="info-btn"><i class="fas fa-question"></i></button>
             </div>
-
-    <div id="year"  class="content-section">
-        <div class="year-header">
-            <div class="control" id="year-control">
-                <div class="control-container" id="year-control-container">
-                    <select id="year-select"></select>
+            <div id="year"  class="content-section">
+                <div class="year-header">
+                    <div class="control" id="year-control">
+                        <div class="control-container" id="year-control-container">
+                            <select id="year-select"></select>
+                        </div>
+                    </div>
+                    <div class="year-header-cases">
+                        <h2 id="total-cases-value">Loading...</h2>
+                    </div>
                 </div>
-            </div>
-            <div class="year-header-cases">
-                <h2 id="total-cases-value">Loading...</h2>
-            </div>
-        </div>
-        <div class="yearly">
-            <div class="yearly-chart-panel">
-                <canvas id="breakdown-chart"></canvas>
-            </div>
-            <div class="yearly-card-container">
-                <div class="yearly-card">
-                    <canvas id="genderChart"></canvas>
+                <div class="yearly">
+                    <div class="yearly-chart-panel">
+                        <canvas id="breakdown-chart"></canvas>
+                    </div>
+                    <div class="yearly-card-container">
+                        <div class="yearly-card">
+                            <canvas id="genderChart"></canvas>
+                        </div>
+                        <div class="yearly-card">
+                            <canvas id="ageChart"></canvas>
+                        </div>
+                    </div>
                 </div>
-                <div class="yearly-card">
-                    <canvas id="ageChart"></canvas>
-                </div>
+                <button id="year-btn" class="info-btn"><i class="fas fa-question"></i></button>
             </div>
-        </div>
-    </div>
-        
-        
-
             <div id="forecast" class="content-section">
                 <h2 class="section-title">Dengue Incidence Forecast</h2>
                 <div class="control">
@@ -186,6 +184,7 @@
                         </div>
                     </div>
                 </div>
+                <button id="forecast-btn" class="info-btn"><i class="fas fa-question"></i></button>
             </div>
             <div id="prevention" class="content-section">
                 <div class="message">
@@ -206,6 +205,8 @@
                         <div class="contact-details-row" id="contact-details-row"></div>
                     </div>
                 </div><h3>Nearby San Pablo City Hospitals</h3>
+                <div id="hospital_map"></div>
+                <button id="hospital-btn" class="info-btn"><i class="fas fa-question"></i></button>
                 <div class="hospitals">
                     <table class="hospital-table" id="hospital-table">
                         <thead>
@@ -218,7 +219,6 @@
                         <tbody id="hospital-list"></tbody>
                     </table>
                 </div>
-                <div id="hospital_map"></div>
             </div>
         </main>
     </div>
@@ -227,15 +227,8 @@
     <div id="modal-overlay" class="overlay">
         <div id="info-modal" class="modal">
             <div class="modal-content">
-                <h2>About the System</h2>
-                <p>This Dengue Monitoring System is a comprehensive tool designed to track, analyze, and predict dengue cases in <b>San Pablo City, Laguna</b>. It provides real-time data, historical analysis, and predictive insights to help the local health unit manage and prevent outbreaks.</p>
-                <p><strong>Features:</strong></p>
-                <ul>
-                    <li><strong>Dashboard:</strong> An at-a-glance overview of current cases, high-risk zones, and trends in San Pablo City.</li>
-                    <li><strong>Predictions:</strong> Forecasts future dengue cases for San Pablo based on historical data.</li>
-                    <li><strong>Barangays:</strong> Detailed statistics for each barangay in San Pablo City.</li>
-                    <li><strong>Yearly Analysis:</strong> In-depth charts showing trends over the years for San Pablo City.</li>
-                </ul>
+                <h2 id="info-title">Loading...</h2>
+                <p id="info-text">Loading...</p>
             </div>
         </div>
     </div>
