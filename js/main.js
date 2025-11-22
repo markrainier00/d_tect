@@ -839,7 +839,7 @@ async function displayForecast(barangayForecastData, citywideForecastData) {
             const riskToScore = { "Low Risk": 1, "Moderate Risk": 2, "High Risk": 3 };
             const riskScores = barangayData.map(d => riskToScore[d.predicted_risk] || 0);
 
-            document.getElementById("forecast-barangay").textContent = "10-Week Risk Forecast in " + barangayName;
+            document.getElementById("forecast-barangay").textContent = "Risk Forecast in " + barangayName;
 
             barangayChart.data.labels = labels;
             barangayChart.data.datasets = [{
